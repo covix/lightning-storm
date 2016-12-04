@@ -1,14 +1,14 @@
 package master2016;
 
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
+import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.ProducerConfig;
+import org.apache.kafka.clients.producer.ProducerRecord;
 import twitter4j.*;
 import twitter4j.auth.AccessToken;
 import twitter4j.conf.ConfigurationBuilder;
 
-import java.io.FileNotFoundException;
-import java.io.PrintWriter;
-import java.io.UnsupportedEncodingException;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.io.*;
+import java.util.Properties;
 
 public class TwitterApp {
     private static class Mode {
@@ -16,9 +16,9 @@ public class TwitterApp {
         static int TWITTER = 2;
     }
 
-    public static void main(String[] args) throws TwitterException, FileNotFoundException, UnsupportedEncodingException {
-        TwitterStream twitterStream;
+    private static KafkaProducer<String, String> prod;
 
+    public static void main(String[] args) throws TwitterException, IOException {
         int mode;
         String consumerKey;
         String consumerSecret;
@@ -27,10 +27,13 @@ public class TwitterApp {
         String kafkaBrokerUrl;
         String filename;
 
+        TwitterStream twitterStream;
 
         if (args.length == 0) {
             // TODO remove after startTwitterApp.sh is finished
-            mode = 1;
+            mode = Mode.TWITTER;
+            // mode = Mode.TWITTER;
+
             consumerKey = "HZldFa2RQ8ByVPa5wTl7UKvQR";
             consumerSecret = "ZwhQSj37kpq6vCRRShBwfK32iB58QnrcidnJJvxF5vzzxPSISM";
             accessToken = "3936335896-DiNCA5l1tQabWe12V45yrARVG87bMGiHA9LzWBA";
@@ -47,27 +50,65 @@ public class TwitterApp {
             filename = args[7];
         }
 
+        initKafkaProducer();
+
+        if (mode == Mode.TWITTER) {
+            readFromTwitter(consumerKey, consumerSecret, accessToken, accessTokenSecret);
+        } else if (mode == Mode.LOGFILE) {
+            readFromLogFile(filename);
+        } else {
+            throw new IllegalArgumentException("Mode not supported");
+        }
+    }
+
+    private static void initKafkaProducer() {
+        Properties props = new Properties();
+        props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092,localhost:9093,localhost:9094");
+        props.put("acks", "all");
+        props.put("retries", 0);
+        props.put("batch.size", 16384);
+        props.put("buffer.memory", 33554432);
+        props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+        props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+
+        prod = new KafkaProducer<String, String>(props);
+    }
+
+    private static void readFromLogFile(String filename) throws IOException {
+        BufferedReader tfbr = new BufferedReader(new FileReader(filename));
+        String line;
+        while ((line = tfbr.readLine()) != null) {
+            writeTweetToKafka(line);
+        }
+    }
+
+    private static void readFromTwitter(String consumerKey, String consumerSecret, String accessToken, String accessTokenSecret) {
+        TwitterStream twitterStream;
+        twitterStream = new TwitterStreamFactory(
+                new ConfigurationBuilder().setJSONStoreEnabled(true).build())
+                .getInstance();
+
         StatusListener listener = new StatusListener() {
             public void onStatus(Status status) {
-                // TODO save tweets to kafka
-                System.out.println(status.getLang() + ": " + "@" + status.getUser().getScreenName() + " - " + status.getText());
-                String rawJSON = TwitterObjectFactory.getRawJSON(status);
+                // System.out.println(status.getLang() + ": " + "@" + status.getUser().getScreenName() + " - " + status.getText());
+                String jsonStatus = TwitterObjectFactory.getRawJSON(status);
+                writeTweetToKafka(jsonStatus);
             }
 
             public void onDeletionNotice(StatusDeletionNotice statusDeletionNotice) {
-                System.out.println("Got a status deletion notice id:" + statusDeletionNotice.getStatusId());
+               // System.out.println("Got a status deletion notice id:" + statusDeletionNotice.getStatusId());
             }
 
             public void onTrackLimitationNotice(int numberOfLimitedStatuses) {
-                System.out.println("Got track limitation notice:" + numberOfLimitedStatuses);
+               // System.out.println("Got track limitation notice:" + numberOfLimitedStatuses);
             }
 
             public void onScrubGeo(long userId, long upToStatusId) {
-                System.out.println("Got scrub_geo event userId:" + userId + " upToStatusId:" + upToStatusId);
+               // System.out.println("Got scrub_geo event userId:" + userId + " upToStatusId:" + upToStatusId);
             }
 
             public void onStallWarning(StallWarning warning) {
-                System.out.println("Got stall warning:" + warning);
+               // System.out.println("Got stall warning:" + warning);
             }
 
             public void onException(Exception ex) {
@@ -75,25 +116,29 @@ public class TwitterApp {
             }
         };
 
-        // TODO create some kind of reader based on the mode
-        if (mode == Mode.TWITTER) {
-            twitterStream = new TwitterStreamFactory(
-                    new ConfigurationBuilder().setJSONStoreEnabled(true).build())
-                    .getInstance();
+        twitterStream.addListener(listener);
+        twitterStream.setOAuthConsumer(consumerKey, consumerSecret);
+        AccessToken token = new AccessToken(accessToken, accessTokenSecret);
+        twitterStream.setOAuthAccessToken(token);
 
-            twitterStream.addListener(listener);
-            twitterStream.setOAuthConsumer(consumerKey, consumerSecret);
-            AccessToken token = new AccessToken(accessToken, accessTokenSecret);
-            twitterStream.setOAuthAccessToken(token);
+        FilterQuery tweetFilterQuery = new FilterQuery();
+        // TODO read actual tweets (not sample). (it could also be right/enough).
+        twitterStream.sample();
+    }
 
-            FilterQuery tweetFilterQuery = new FilterQuery();
-            // TODO read actual tweets (not sample)
-            twitterStream.sample();
-        } else if (mode == Mode.LOGFILE) {
-            // TODO read from logfile
-            throw new NotImplementedException();
-        } else {
-            throw new IllegalArgumentException("Mode not supported");
-        }
+    private static void writeTweetToKafka(String tweet) {
+        String topic = "myTopic";
+        int partition = 0;
+        String key = "testKey";
+        String value = tweet;
+
+        // TODO check wether all tweets are written to kafka
+        // adding .get() at the returned object will make the method synchronous.
+        // without it, the application won't wait for it before terminating
+        prod.send(new ProducerRecord<String, String>(topic, partition, key, value));
+    }
+
+    private static void closeKafkaProductor() {
+        prod.close();
     }
 }
