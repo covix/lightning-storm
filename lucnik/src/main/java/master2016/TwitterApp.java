@@ -32,7 +32,7 @@ public class TwitterApp {
         if (args.length == 0) {
             // TODO remove after startTwitterApp.sh is finished
             mode = Mode.TWITTER;
-            // mode = Mode.TWITTER;
+            // mode = Mode.LOGFILE;
 
             consumerKey = "HZldFa2RQ8ByVPa5wTl7UKvQR";
             consumerSecret = "ZwhQSj37kpq6vCRRShBwfK32iB58QnrcidnJJvxF5vzzxPSISM";
@@ -83,6 +83,7 @@ public class TwitterApp {
     }
 
     private static void readFromTwitter(String consumerKey, String consumerSecret, String accessToken, String accessTokenSecret) {
+        // TODO should it ever end?
         TwitterStream twitterStream;
         twitterStream = new TwitterStreamFactory(
                 new ConfigurationBuilder().setJSONStoreEnabled(true).build())

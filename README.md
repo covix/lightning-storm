@@ -18,3 +18,7 @@ Consumer Secret `ZwhQSj37kpq6vCRRShBwfK32iB58QnrcidnJJvxF5vzzxPSISM`
 Access Token `3936335896-DiNCA5l1tQabWe12V45yrARVG87bMGiHA9LzWBA`
 
 Access Token Secret `fjeAmE1ZiY6Z34v5ioc32yh49HklHYNyIGFanPxWvqImw`
+
+
+# Questions:
+In Kafka, can we store some particular Data Structure or only json tweets?
