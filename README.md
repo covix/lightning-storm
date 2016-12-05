@@ -20,5 +20,29 @@ Access Token `3936335896-DiNCA5l1tQabWe12V45yrARVG87bMGiHA9LzWBA`
 Access Token Secret `fjeAmE1ZiY6Z34v5ioc32yh49HklHYNyIGFanPxWvqImw`
 
 
+# Running the project locally
+
+```bash
+cd $KAFKA_FOLDER
+
+# start zookeper
+bin/zookeeper-server-start.sh config/zookeeper.properties
+
+# start kafka
+bin/kafka-server-start.sh config/server.properties
+```
+
+## To test it with the built-in scripts
+```bash
+cd $KAFKA_FOLDER
+
+# producer
+bin/kafka-console-producer.sh --broker-list localhost:9092,localhost:9093,localhost:9094 --topic myTopic
+
+# consumer
+bin/kafka-console-consumer.sh --bootstrap-server localhost:9092,localhost:9093,localhost:9094 --topic myTopic --from-beginning
+``` 
+ 
+
 # Questions:
 In Kafka, can we store some particular Data Structure or only json tweets?

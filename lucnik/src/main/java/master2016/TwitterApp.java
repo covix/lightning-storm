@@ -133,7 +133,7 @@ public class TwitterApp {
         String key = "testKey";
         String value = tweet;
 
-        // TODO check wether all tweets are written to kafka
+        // TODO check whether all tweets are written to kafka
         // adding .get() at the returned object will make the method synchronous.
         // without it, the application won't wait for it before terminating
         prod.send(new ProducerRecord<String, String>(topic, partition, key, value));
