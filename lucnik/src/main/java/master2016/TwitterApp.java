@@ -7,7 +7,10 @@ import twitter4j.*;
 import twitter4j.auth.AccessToken;
 import twitter4j.conf.ConfigurationBuilder;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.Properties;
 
 public class TwitterApp {
@@ -27,8 +30,6 @@ public class TwitterApp {
         String kafkaBrokerUrl;
         String filename;
 
-        TwitterStream twitterStream;
-
         if (args.length == 0) {
             // TODO remove after startTwitterApp.sh is finished
             mode = Mode.TWITTER;
@@ -39,7 +40,7 @@ public class TwitterApp {
             accessToken = "3936335896-DiNCA5l1tQabWe12V45yrARVG87bMGiHA9LzWBA";
             accessTokenSecret = "fjeAmE1ZiY6Z34v5ioc32yh49HklHYNyIGFanPxWvqImw";
             kafkaBrokerUrl = null;
-            filename = "./data/tweets.txt";
+            filename = Paths.get("data", "tweets.txt").toString();
         } else {
             mode = Integer.parseInt(args[1]);
             consumerKey = args[2];
@@ -71,7 +72,7 @@ public class TwitterApp {
         props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
         props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
 
-        prod = new KafkaProducer<String, String>(props);
+        prod = new KafkaProducer<>(props);
     }
 
     private static void readFromLogFile(String filename) throws IOException {
@@ -80,10 +81,11 @@ public class TwitterApp {
         while ((line = tfbr.readLine()) != null) {
             writeTweetToKafka(line);
         }
+        closeKafkaProductor();
     }
 
     private static void readFromTwitter(String consumerKey, String consumerSecret, String accessToken, String accessTokenSecret) {
-        // TODO should it ever end?
+        // TODO should it ever end? If so, call close!
         TwitterStream twitterStream;
         twitterStream = new TwitterStreamFactory(
                 new ConfigurationBuilder().setJSONStoreEnabled(true).build())
@@ -97,19 +99,19 @@ public class TwitterApp {
             }
 
             public void onDeletionNotice(StatusDeletionNotice statusDeletionNotice) {
-               // System.out.println("Got a status deletion notice id:" + statusDeletionNotice.getStatusId());
+                // System.out.println("Got a status deletion notice id:" + statusDeletionNotice.getStatusId());
             }
 
             public void onTrackLimitationNotice(int numberOfLimitedStatuses) {
-               // System.out.println("Got track limitation notice:" + numberOfLimitedStatuses);
+                // System.out.println("Got track limitation notice:" + numberOfLimitedStatuses);
             }
 
             public void onScrubGeo(long userId, long upToStatusId) {
-               // System.out.println("Got scrub_geo event userId:" + userId + " upToStatusId:" + upToStatusId);
+                // System.out.println("Got scrub_geo event userId:" + userId + " upToStatusId:" + upToStatusId);
             }
 
             public void onStallWarning(StallWarning warning) {
-               // System.out.println("Got stall warning:" + warning);
+                // System.out.println("Got stall warning:" + warning);
             }
 
             public void onException(Exception ex) {
@@ -130,13 +132,14 @@ public class TwitterApp {
     private static void writeTweetToKafka(String tweet) {
         String topic = "myTopic";
         int partition = 0;
+        // From the Docs:
+        // The key is an optional message key that was used for partition assignment. The key can be null.
         String key = "testKey";
-        String value = tweet;
 
         // TODO check whether all tweets are written to kafka
         // adding .get() at the returned object will make the method synchronous.
         // without it, the application won't wait for it before terminating
-        prod.send(new ProducerRecord<String, String>(topic, partition, key, value));
+        prod.send(new ProducerRecord<>(topic, partition, key, tweet));
     }
 
     private static void closeKafkaProductor() {
