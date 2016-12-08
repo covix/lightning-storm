@@ -22,7 +22,7 @@ public class KafkaConsumerExample {
         properties.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
 
         try (KafkaConsumer<String, String> consumer = new KafkaConsumer<>(properties)) {
-            consumer.subscribe(Arrays.asList("master2016-replicated-java", "myTopic"));
+            consumer.subscribe(Arrays.asList("myTopic", "consumerExample"));
             while (true) {
                 // For polling check on the Docs.
                 // https://kafka.apache.org/0100/javadoc/org/apache/kafka/clients/consumer/KafkaConsumer.html#poll(long)

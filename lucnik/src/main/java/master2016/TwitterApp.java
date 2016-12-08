@@ -32,8 +32,8 @@ public class TwitterApp {
 
         if (args.length == 0) {
             // TODO remove after startTwitterApp.sh is finished
-            mode = Mode.TWITTER;
-            // mode = Mode.LOGFILE;
+            // mode = Mode.TWITTER;
+            mode = Mode.LOGFILE;
 
             consumerKey = "HZldFa2RQ8ByVPa5wTl7UKvQR";
             consumerSecret = "ZwhQSj37kpq6vCRRShBwfK32iB58QnrcidnJJvxF5vzzxPSISM";
@@ -103,7 +103,7 @@ public class TwitterApp {
             }
 
             public void onTrackLimitationNotice(int numberOfLimitedStatuses) {
-                // System.out.println("Got track limitation notice:" + numberOfLimitedStatuses);
+                System.out.println("Got track limitation notice:" + numberOfLimitedStatuses);
             }
 
             public void onScrubGeo(long userId, long upToStatusId) {
@@ -124,13 +124,13 @@ public class TwitterApp {
         AccessToken token = new AccessToken(accessToken, accessTokenSecret);
         twitterStream.setOAuthAccessToken(token);
 
-        FilterQuery tweetFilterQuery = new FilterQuery();
+        // FilterQuery tweetFilterQuery = new FilterQuery();
         // TODO read actual tweets (not sample). (it could also be right/enough).
         twitterStream.sample();
     }
 
     private static void writeTweetToKafka(String tweet) {
-        String topic = "myTopic";
+        String topic = "twitter";
         int partition = 0;
         // From the Docs:
         // The key is an optional message key that was used for partition assignment. The key can be null.

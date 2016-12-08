@@ -23,13 +23,15 @@ public class HashtagReaderBolt extends BaseRichBolt {
 
     public void execute(Tuple tuple) {
         Status tweet = (Status) tuple.getValueByField("tweet");
-        for (HashtagEntity hashtage : tweet.getHashtagEntities()) {
-            System.out.println("Hashtag: " + hashtage.getText());
-            this.collector.emit(new Values(hashtage.getText()));
+        String lang = tweet.getLang();
+
+        for (HashtagEntity hashtag : tweet.getHashtagEntities()) {
+            // System.out.println("Hashtag: " + hashtag.getText());
+            this.collector.emit(new Values(lang, hashtag.getText()));
         }
     }
 
     public void declareOutputFields(OutputFieldsDeclarer declarer) {
-        declarer.declare(new Fields("hashtag"));
+        declarer.declare(new Fields("lang", "hashtag"));
     }
 }

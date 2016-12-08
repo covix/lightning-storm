@@ -22,7 +22,7 @@ public class KafkaProducerExample {
 
         KafkaProducer<String, String> prod = new KafkaProducer<>(props);
 
-        String topic = "myTopic";
+        String topic = "consumerExample";
         int partition = 0;
         // From the Docs:
         // The key is an optional message key that was used for partition assignment. The key can be null.
@@ -36,7 +36,7 @@ public class KafkaProducerExample {
         while (!terminate) {
             String value = new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime());
             prod.send(new ProducerRecord<>(topic, partition, key, value));
-            Thread.sleep(1000);
+            // Thread.sleep(1000);
         }
         prod.close();
     }

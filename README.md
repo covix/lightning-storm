@@ -45,4 +45,8 @@ bin/kafka-console-consumer.sh --bootstrap-server localhost:9092,localhost:9093,l
  
 
 # Questions:
-In Kafka, can we store some particular Data Structure or only json tweets?
+- Should we stop downloading tweets from twitter? 
+    - Some says no.
+
+- In Kafka, can we store some particular Data Structure or only json tweets?
+    - it seems no

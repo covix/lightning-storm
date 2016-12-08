@@ -27,11 +27,11 @@ class DebugBolt extends BaseRichBolt {
         this.count += 1;
 
         String tupleString = tuple.getString(0);
-        System.out.println("[DEBUG] new tuple received");
+        // System.out.println("[DEBUG] new tuple received");
         for (String fieldName : tuple.getFields()) {
-            System.out.println(fieldName + ": " + tuple.getValueByField(fieldName));
+            // System.out.println(fieldName + ": " + tuple.getValueByField(fieldName));
         }
-        System.out.println();
+        // System.out.println();
 
         // TODO no sé if it is necesseray to do it
         collector.ack(tuple);

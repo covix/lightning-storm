@@ -13,14 +13,21 @@ import org.apache.storm.tuple.Fields;
 import org.apache.storm.tuple.Values;
 import org.apache.storm.utils.Utils;
 import twitter4j.Status;
+import twitter4j.TwitterException;
+import twitter4j.TwitterObjectFactory;
 
+import java.awt.*;
 import java.awt.image.ImagingOpException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 public class KafkaTweetsSpout extends BaseRichSpout {
 
     private SpoutOutputCollector collector;
     private KafkaConsumer<String, String> consumer;
+
+    private int numRecordsWindow = 0;
+    private int totalTutple = 0;
 
     public void open(Map conf, TopologyContext context, SpoutOutputCollector collector) {
         System.out.println("[KAFKA] opening method called");
@@ -36,38 +43,47 @@ public class KafkaTweetsSpout extends BaseRichSpout {
 
         // This ensure that only one record is retrieved for each call to `poll`
         // TODO is this a bottleneck? Should we allow receive more records each time?
-        properties.put("max.poll.records", 1);
+        // It could be that retrieving more tuple each time is better than only one (due to requests overhead)
+        // properties.put("max.poll.records", 1);
 
         // Read from the beginning [more or less]
         // TODO should it be removed?
-        properties.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+        // properties.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
 
         // This could not be thread safe
         consumer = new KafkaConsumer<>(properties);
-        consumer.subscribe(Collections.singletonList("myTopic"));
+
+        consumer.subscribe(Arrays.asList("twitter"));
         this.collector = collector;
     }
 
     public void nextTuple() {
-        System.out.println("[KAFKA] Someone asked for tuple!");
+        // System.out.println("[KAFKA] Someone asked for tuple!");
         // For polling check on the Docs.
         // https://kafka.apache.org/0100/javadoc/org/apache/kafka/clients/consumer/KafkaConsumer.html#poll(long)
         ConsumerRecords<String, String> records = consumer.poll(0);
 
-        // for (ConsumerRecord<String, String> record : records) {
-        //     System.out.print("Topic: " + record.topic() + ", ");
-        //     System.out.print("Partition: " + record.partition() + ", ");
-        //     System.out.print("Key: " + record.key() + ", ");
-        //     System.out.println("Value: " + record.value() + ", ");
-        // }
-
-        if (records != null) {
-            // TODO now it is emitting only the first for each request
+        if (!records.isEmpty()) {
+            int count = 0;
+            this.numRecordsWindow += 1;
             for (ConsumerRecord<String, String> record : records) {
-                collector.emit(new Values(record.value()));
-                System.out.println("emitted");
-                break;
+                try {
+                    Status status = TwitterObjectFactory.createStatus(record.value());
+
+                    // non blocking operation
+                    collector.emit(new Values(status));
+
+                    // System.out.println("[KAFKA] emitted");
+                    count += 1;
+
+                } catch (TwitterException e) {
+                    // e.printStackTrace();
+                }
             }
+            this.totalTutple += count;
+            // System.out.println("[KAFKA] window of: " + count );
+            double avg = this.totalTutple / this.numRecordsWindow;
+            // System.out.println("[KAFKA] avg: " + avg);
         }
     }
 
