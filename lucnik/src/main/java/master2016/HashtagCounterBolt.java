@@ -1,5 +1,8 @@
 package master2016;
 
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -15,7 +18,8 @@ import org.apache.storm.tuple.Tuple;
 public class HashtagCounterBolt extends BaseRichBolt {
     private HashMap<String, HashMap<String, Integer>> langCounterMap;
     private OutputCollector collector;
-    private final int N_RESULT = 3;
+    private static final int N_RESULT = 3;
+    private static final String GROUP_ID = "03";
 
     public void prepare(Map conf, TopologyContext context, OutputCollector collector) {
         this.langCounterMap = new HashMap<>();
@@ -76,7 +80,16 @@ public class HashtagCounterBolt extends BaseRichBolt {
             }
             r = r.substring(0, r.length() - 1);
 
+            // TODO what if tweets for a given language are not found? should we create the file anyway?
+            // TODO shall we initialize langCounterMap with the list of languages?
             System.out.println(windowNumber + "," + lang + "," + r);
+            try {
+                PrintWriter writer = new PrintWriter(lang + "_" + GROUP_ID + ".log", "UTF-8");
+                writer.println(windowNumber + "," + lang + "," + r);
+                writer.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 

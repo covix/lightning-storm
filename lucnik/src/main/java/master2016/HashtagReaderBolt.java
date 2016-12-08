@@ -26,6 +26,7 @@ public class HashtagReaderBolt extends BaseRichBolt {
         String lang = tweet.getLang();
 
         for (HashtagEntity hashtag : tweet.getHashtagEntities()) {
+            // TODO shall we emit lowercase hashtags?
             // System.out.println("Hashtag: " + hashtag.getText());
             this.collector.emit(new Values(lang, hashtag.getText()));
         }
