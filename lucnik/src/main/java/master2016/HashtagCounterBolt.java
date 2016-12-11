@@ -20,15 +20,26 @@ public class HashtagCounterBolt extends BaseRichBolt {
     private OutputCollector collector;
     private static final int N_RESULT = 3;
     private static final String GROUP_ID = "03";
+    String keyWord;
+    int window=0;
 
     public void prepare(Map conf, TopologyContext context, OutputCollector collector) {
         this.langCounterMap = new HashMap<>();
         this.collector = collector;
+        keyWord = (String) conf.get("my.keyWord");
     }
 
     public void execute(Tuple tuple) {
         String lang = tuple.getStringByField("lang");
-
+        
+        if(keyWord.equals(tuple.getStringByField("hashtag"))){
+        System.out.println("ALAMR"+keyWord+tuple.getStringByField("hashtag"));	
+        window++;
+//        if(window==2){
+//        	System.out.println();
+//        	
+//        }
+        
         if (!langCounterMap.containsKey(lang)) {
             langCounterMap.put(lang, new HashMap<String, Integer>());
         } else {
@@ -43,11 +54,12 @@ public class HashtagCounterBolt extends BaseRichBolt {
             }
 
         }
+        }
         collector.ack(tuple);
     }
 
     public void cleanup() {
-        System.out.println("output");
+        System.out.println("output"+keyWord);
         int windowNumber = -1;
 
         for (Map.Entry<String, HashMap<String, Integer>> entry : langCounterMap.entrySet()) {

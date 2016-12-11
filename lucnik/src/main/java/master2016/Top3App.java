@@ -51,7 +51,7 @@ public class Top3App {
 
 		LocalCluster cluster = new LocalCluster();
 		cluster.submitTopology("topologyName", config, builder.createTopology());
-		Thread.sleep(180 * 1000);
+		Thread.sleep(60 * 1000);
 		cluster.shutdown();
 	}
 }

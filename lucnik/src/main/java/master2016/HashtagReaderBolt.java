@@ -18,6 +18,8 @@ public class HashtagReaderBolt extends BaseRichBolt {
 	private OutputCollector collector;
 	String keyWord;
 	Boolean start = false;
+	int count=0;
+
 
 	public void prepare(Map conf, TopologyContext context, OutputCollector collector) {
 		this.collector = collector;
@@ -31,22 +33,27 @@ public class HashtagReaderBolt extends BaseRichBolt {
 		for (HashtagEntity hashtag : tweet.getHashtagEntities()) {
 			// TODO shall we emit lowercase hashtags? YES! (at least for the internal comparison?
 			// System.out.println("Hashtag: " + hashtag.getText());
-			System.out.println(hashtag.getText());
+			System.out.println("Hashtag: "+hashtag.getText());
 			System.out.println("#### TEST "+keyWord+ " "+ hashtag.getText());			
 			if (keyWord.equals((String)hashtag.getText().toLowerCase())) {
 				start = !start;
 				System.out.println("WINDOWSTART/END");
-				// TODO skip the keyword-hashtag for emitting!
+//				if(count==0){
+//					count++;				
+//					continue;
+//				}
+//				if(count==1){
+//					start=!start;
+//					continue;
+//				}
 			}
 		
 			if (start == true) {
 				this.collector.emit(new Values(lang, hashtag.getText().toLowerCase()));
-				System.out.println("EMIT: "+hashtag.getText());
+				System.out.println("I EMIT: "+hashtag.getText());
 			}
 
 		}
-		System.out.println("CHACK");
-
 	}
 	public void declareOutputFields(OutputFieldsDeclarer declarer) {
 		declarer.declare(new Fields("lang", "hashtag"));
