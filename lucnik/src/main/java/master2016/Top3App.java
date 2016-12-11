@@ -15,15 +15,15 @@ public class Top3App {
         if (args.length == 0) {
             // TODO only for debug, then remove it
 
-            langlist = "en:christmas";
-            // langlist = "en:house,it:casa,de:kartoffeln,es:ordenador";
+            // langlist = "en:christmas";
+            langlist = "en:house,it:casa,de:hause,es:casa";
 
             // TODO need to start using it
             kafkaBrokerUrl = "";
             topologyName = "hello-storm";
 
             // TODO pass to the hashtag counter bolt
-            outputFolder = "./";
+            outputFolder = "output";
         } else {
             langlist = args[1];
             kafkaBrokerUrl = args[2];
@@ -46,7 +46,7 @@ public class Top3App {
 
         builder.setBolt("twitter-hashtag-reader-bolt", new HashtagReaderBolt(langlist)).shuffleGrouping("kafka-twitter-spout");
 
-        builder.setBolt("twitter-hashtag-counter-bolt", new HashtagCounterBolt())
+        builder.setBolt("twitter-hashtag-counter-bolt", new HashtagCounterBolt(langlist, outputFolder))
                 .fieldsGrouping("twitter-hashtag-reader-bolt", new Fields("lang"));
 
         // builder.setBolt("debug-bolt", new DebugBolt())

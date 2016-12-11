@@ -32,8 +32,8 @@ public class TwitterApp {
 
         if (args.length == 0) {
             // TODO remove after startTwitterApp.sh is finished
-            // mode = Mode.TWITTER;
-            mode = Mode.LOGFILE;
+            mode = Mode.TWITTER;
+            // mode = Mode.LOGFILE;
 
             consumerKey = "HZldFa2RQ8ByVPa5wTl7UKvQR";
             consumerSecret = "ZwhQSj37kpq6vCRRShBwfK32iB58QnrcidnJJvxF5vzzxPSISM";

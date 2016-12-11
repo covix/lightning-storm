@@ -22,8 +22,9 @@ public class HashtagReaderBolt extends BaseRichBolt {
     private HashMap<String, String> languageKeyword;
 
     public HashtagReaderBolt(String langlist) {
-        languageWindow = new HashMap<>();
-        languageKeyword = new HashMap<>();
+        // TODO Move definition to prepare
+        this.languageWindow = new HashMap<>();
+        this.languageKeyword = new HashMap<>();
 
         String[] langWithKeywords = langlist.split(",");
         for (String langKeyword : langWithKeywords) {
@@ -31,11 +32,10 @@ public class HashtagReaderBolt extends BaseRichBolt {
             String lang = split[0];
             String keyword = split[1];
 
-            languageWindow.put(lang, false);
-            languageKeyword.put(lang, keyword);
+            this.languageWindow.put(lang, false);
+            this.languageKeyword.put(lang, keyword);
         }
     }
-
 
     public void prepare(Map conf, TopologyContext context, OutputCollector collector) {
         this.collector = collector;
@@ -46,8 +46,8 @@ public class HashtagReaderBolt extends BaseRichBolt {
         String lang = tweet.getLang();
 
         // TODO This is for debug, but it could be left here for robustness
-        if (languageKeyword.containsKey(lang)) {
-            String keyword = languageKeyword.get(lang);
+        if (this.languageKeyword.containsKey(lang)) {
+            String keyword = this.languageKeyword.get(lang);
 
             for (HashtagEntity hashtag : tweet.getHashtagEntities()) {
                 // TODO shall we emit lowercase hashtags? YES! (at least for the internal comparison?
@@ -55,15 +55,16 @@ public class HashtagReaderBolt extends BaseRichBolt {
                 System.out.println("#### TEST " + keyword + " " + hashtag.getText());
 
                 if (keyword.equals(hashtag.getText().toLowerCase())) {
-                    languageWindow.put(lang, !languageWindow.get(lang));
-                    System.out.println("WINDOW: " + languageWindow.get(lang));
+                    // there's no need to stop the window (a closing keyword is also an opening
+                    // languageWindow.put(lang, !languageWindow.get(lang));
+                    languageWindow.put(lang, true);
+                    System.out.println("WINDOW: " + this.languageWindow.get(lang));
                 }
 
-                if (languageWindow.get(lang)) {
+                if (this.languageWindow.get(lang)) {
                     this.collector.emit(new Values(lang, hashtag.getText().toLowerCase()));
                     System.out.println("I EMIT: " + hashtag.getText());
                 }
-
             }
         }
     }
