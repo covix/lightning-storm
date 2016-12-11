@@ -16,7 +16,7 @@ public class Top3App {
             // TODO only for debug, then remove it
 
             // langlist = "en:christmas";
-            langlist = "en:house,it:casa,de:hause,es:casa";
+            langlist = "en:christmas,it:natale,de:weihnachten,es:navidad";
 
             // TODO need to start using it
             kafkaBrokerUrl = "";

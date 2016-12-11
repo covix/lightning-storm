@@ -10,7 +10,6 @@ import org.apache.storm.tuple.Tuple;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
@@ -26,9 +25,9 @@ public class HashtagCounterBolt extends BaseRichBolt {
 
     private HashMap<String, Boolean> languageWindow;
     private HashMap<String, String> languageKeyword;
+    private HashMap<String, Integer> langWindowNumber;
 
     private OutputCollector collector;
-    private int windowNumber;
 
     public HashtagCounterBolt(String langList, String outputFolder) {
         // TODO Move definition to prepare
@@ -36,7 +35,7 @@ public class HashtagCounterBolt extends BaseRichBolt {
         this.languageKeyword = new HashMap<>();
         this.openLangCounterMap = new HashMap<>();
         this.closedLangCounterMap = new HashMap<>();
-        this.windowNumber = 0;
+        this.langWindowNumber = new HashMap<>();
         this.outputFolder = Paths.get(outputFolder).toString();
 
         String[] langWithKeywords = langList.split(",");
@@ -47,6 +46,7 @@ public class HashtagCounterBolt extends BaseRichBolt {
 
             this.languageWindow.put(lang, false);
             this.languageKeyword.put(lang, keyword);
+            this.langWindowNumber.put(lang, 0);
             this.openLangCounterMap.put(lang, new HashMap<String, Integer>());
         }
     }
@@ -66,7 +66,7 @@ public class HashtagCounterBolt extends BaseRichBolt {
             String hashtag = tuple.getStringByField("hashtag");
 
             if (keyword.equals(hashtag)) {
-                this.windowNumber += 1;
+                this.langWindowNumber.put(lang, this.langWindowNumber.get(lang) + 1);
                 if (!languageWindow.get(lang)) {
                     this.languageWindow.put(lang, true);
                 }
@@ -130,12 +130,12 @@ public class HashtagCounterBolt extends BaseRichBolt {
             // TODO what if tweets for a given language are not found? should we create the file anyway?
             // TODO shall we initialize langCounterMap with the list of languages?
 
-            System.out.println(this.windowNumber + "," + lang + "," + r);
+            System.out.println(this.langWindowNumber.get(lang) + "," + lang + "," + r);
             try {
                 File outputPath = Paths.get(this.outputFolder, lang + "_" + HashtagCounterBolt.GROUP_ID + ".log").toFile();
                 outputPath.getParentFile().mkdirs();
                 PrintWriter writer = new PrintWriter(outputPath, "UTF-8");
-                writer.println(this.windowNumber + "," + lang + "," + r);
+                writer.println(this.langWindowNumber.get(lang) + "," + lang + "," + r);
                 writer.close();
             } catch (IOException e) {
                 e.printStackTrace();
