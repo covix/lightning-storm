@@ -6,52 +6,55 @@ import org.apache.storm.topology.TopologyBuilder;
 import org.apache.storm.tuple.Fields;
 
 public class Top3App {
-	public static void main(String[] args) throws Exception {
-		String keyWord = "christmas";
-		if (args.length == 0) {
-			// TODO only for debug, then remove it
+    public static void main(String[] args) throws Exception {
+        String langlist;
+        String kafkaBrokerUrl;
+        String topologyName;
+        String outputFolder;
 
-			// TODO need to pass them to some bolt
-			// Do it with an splittet array?
-			String langlist = "en:house,it:casa,de:kartoffeln,es:ordenador";
+        if (args.length == 0) {
+            // TODO only for debug, then remove it
 
-			// TODO need to start using ti
-			String kafkaBrokerUrl = "";
-			String topologyName = "hello-storm";
+            langlist = "en:christmas";
+            // langlist = "en:house,it:casa,de:kartoffeln,es:ordenador";
 
-			// TODO pass to the hashtag counter bolt
-			String outputFolder = "./";
-		} else {
-			String langlist = args[1];
-			String kafkaBrokerUrl = args[2];
-			String topologyName = args[3];
-			String outputFolder = args[4];
-		}
+            // TODO need to start using it
+            kafkaBrokerUrl = "";
+            topologyName = "hello-storm";
 
-		// String[] langWithKeywords = langlist.split(",");
+            // TODO pass to the hashtag counter bolt
+            outputFolder = "./";
+        } else {
+            langlist = args[1];
+            kafkaBrokerUrl = args[2];
+            topologyName = args[3];
+            outputFolder = args[4];
+        }
 
-		Config config = new Config();
+        // String[] langWithKeywords = langlist.split(",");
 
-		// Window try
-		config.put("my.keyWord", keyWord);
+        Config config = new Config();
 
-		config.setDebug(false);
+        // Window try
+        // config.put("my.keyWord", keyWord);
 
-		TopologyBuilder builder = new TopologyBuilder();
+        config.setDebug(false);
 
-		builder.setSpout("kafka-twitter-spout", new KafkaTweetsSpout());
+        TopologyBuilder builder = new TopologyBuilder();
 
-		builder.setBolt("twitter-hashtag-reader-bolt", new HashtagReaderBolt()).shuffleGrouping("kafka-twitter-spout");
+        builder.setSpout("kafka-twitter-spout", new KafkaTweetsSpout());
 
-		builder.setBolt("twitter-hashtag-counter-bolt", new HashtagCounterBolt())
-				.fieldsGrouping("twitter-hashtag-reader-bolt", new Fields("lang"));
+        builder.setBolt("twitter-hashtag-reader-bolt", new HashtagReaderBolt(langlist)).shuffleGrouping("kafka-twitter-spout");
 
-		// builder.setBolt("debug-bolt", new DebugBolt())
-		// .shuffleGrouping("twitter-spout");
+        builder.setBolt("twitter-hashtag-counter-bolt", new HashtagCounterBolt())
+                .fieldsGrouping("twitter-hashtag-reader-bolt", new Fields("lang"));
 
-		LocalCluster cluster = new LocalCluster();
-		cluster.submitTopology("topologyName", config, builder.createTopology());
-		Thread.sleep(60 * 1000);
-		cluster.shutdown();
-	}
+        // builder.setBolt("debug-bolt", new DebugBolt())
+        // .shuffleGrouping("twitter-spout");
+
+        LocalCluster cluster = new LocalCluster();
+        cluster.submitTopology("topologyName", config, builder.createTopology());
+        Thread.sleep(60 * 1000);
+        cluster.shutdown();
+    }
 }

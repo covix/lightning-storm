@@ -31,15 +31,15 @@ public class HashtagCounterBolt extends BaseRichBolt {
 
     public void execute(Tuple tuple) {
         String lang = tuple.getStringByField("lang");
-        
+
         if(keyWord.equals(tuple.getStringByField("hashtag"))){
-        System.out.println("ALAMR"+keyWord+tuple.getStringByField("hashtag"));	
+        System.out.println("ALAMR"+keyWord+tuple.getStringByField("hashtag"));
         window++;
 //        if(window==2){
 //        	System.out.println();
 //        	
 //        }
-        
+
         if (!langCounterMap.containsKey(lang)) {
             langCounterMap.put(lang, new HashMap<String, Integer>());
         } else {

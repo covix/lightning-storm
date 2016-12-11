@@ -50,7 +50,6 @@ public class TwitterApp {
             kafkaBrokerUrl = args[6];
             filename = args[7];
         }
-        mode=Mode.TWITTER;
         initKafkaProducer();
 
         if (mode == Mode.TWITTER) {
