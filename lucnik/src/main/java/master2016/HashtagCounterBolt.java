@@ -60,41 +60,36 @@ public class HashtagCounterBolt extends BaseRichBolt {
 
     public void execute(Tuple tuple) {
         String lang = tuple.getStringByField("lang");
+        String keyword = this.languageKeyword.get(lang);
+        String hashtag = tuple.getStringByField("hashtag");
 
-        // TODO This is for debug, but it could be left here for robustness
-        if (this.languageKeyword.containsKey(lang)) {
-            String keyword = this.languageKeyword.get(lang);
+        if (keyword.equals(hashtag)) {
+            this.langWindowNumber.put(lang, this.langWindowNumber.get(lang) + 1);
+            if (!languageWindow.get(lang)) {
+                this.languageWindow.put(lang, true);
+            }
 
-            String hashtag = tuple.getStringByField("hashtag");
+            if (this.languageWindow.get(lang)) {
+                // close and save current window in the old one
+                HashMap<String, Integer> closingCounterMap = this.openLangCounterMap.get(lang);
 
-            if (keyword.equals(hashtag)) {
-                this.langWindowNumber.put(lang, this.langWindowNumber.get(lang) + 1);
-                if (!languageWindow.get(lang)) {
-                    this.languageWindow.put(lang, true);
+                HashMap<String, Integer> tmpCounterMap = new HashMap<>();
+                for (Map.Entry<String, Integer> hashtagCount : closingCounterMap.entrySet()) {
+                    tmpCounterMap.put(hashtagCount.getKey(), hashtagCount.getValue());
                 }
-
-                if (this.languageWindow.get(lang)) {
-                    // close and save current window in the old one
-                    HashMap<String, Integer> closingCounterMap = this.openLangCounterMap.get(lang);
-
-                    HashMap<String, Integer> tmpCounterMap = new HashMap<>();
-                    for (Map.Entry<String, Integer> hashtagCount : closingCounterMap.entrySet()) {
-                        tmpCounterMap.put(hashtagCount.getKey(), hashtagCount.getValue());
-                    }
-                    this.closedLangCounterMap.put(lang, tmpCounterMap);
-                    closingCounterMap.clear();
-                    System.out.println("CLEANED " + this.openLangCounterMap.get(lang).keySet());
-                    // cleanup();
-                }
+                this.closedLangCounterMap.put(lang, tmpCounterMap);
+                closingCounterMap.clear();
+                System.out.println("CLEANED " + this.openLangCounterMap.get(lang).keySet());
+                // cleanup();
+            }
+        } else {
+            // update counter for that language
+            HashMap<String, Integer> counterMap = this.openLangCounterMap.get(lang);
+            if (!counterMap.containsKey(hashtag)) {
+                counterMap.put(hashtag, 1);
             } else {
-                // update counter for that language
-                HashMap<String, Integer> counterMap = this.openLangCounterMap.get(lang);
-                if (!counterMap.containsKey(hashtag)) {
-                    counterMap.put(hashtag, 1);
-                } else {
-                    Integer c = counterMap.get(hashtag) + 1;
-                    counterMap.put(hashtag, c);
-                }
+                Integer c = counterMap.get(hashtag) + 1;
+                counterMap.put(hashtag, c);
             }
         }
         this.collector.ack(tuple);

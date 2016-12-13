@@ -2,6 +2,7 @@ package master2016;
 
 import org.apache.storm.Config;
 import org.apache.storm.LocalCluster;
+import org.apache.storm.StormSubmitter;
 import org.apache.storm.topology.TopologyBuilder;
 import org.apache.storm.tuple.Fields;
 
@@ -15,8 +16,8 @@ public class Top3App {
         if (args.length == 0) {
             // TODO only for debug, then remove it
 
-            // langlist = "en:christmas";
-            langlist = "en:2016MAMA,it:natale,de:weihnachten,es:navidad";
+            // langlist = "en:2016MAMA";
+            langlist = "en:christmas,it:natale,de:weihnachten,es:navidad";
 
             // TODO need to start using it
             kafkaBrokerUrl = "";
@@ -52,9 +53,11 @@ public class Top3App {
         // builder.setBolt("debug-bolt", new DebugBolt())
         // .shuffleGrouping("twitter-spout");
 
-        LocalCluster cluster = new LocalCluster();
-        cluster.submitTopology("topologyName", config, builder.createTopology());
-        Thread.sleep(40 * 1000);
-        cluster.shutdown();
+        // LocalCluster cluster = new LocalCluster();
+        // cluster.submitTopology(topologyName, config, builder.createTopology());
+        // Thread.sleep(40 * 1000);
+        // cluster.shutdown();
+
+        StormSubmitter.submitTopology(topologyName, config, builder.createTopology());
     }
 }

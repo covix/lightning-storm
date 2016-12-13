@@ -41,11 +41,6 @@ public class KafkaTweetsSpout extends BaseRichSpout {
         properties.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
         properties.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
 
-        // This ensure that only one record is retrieved for each call to `poll`
-        // TODO is this a bottleneck? Should we allow receive more records each time?
-        // It could be that retrieving more tuple each time is better than only one (due to requests overhead)
-        // properties.put("max.poll.records", 1);
-
         // Read from the beginning [more or less]
         // TODO should it be removed?
         // properties.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
