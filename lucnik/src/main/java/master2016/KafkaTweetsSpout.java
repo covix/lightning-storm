@@ -43,7 +43,7 @@ public class KafkaTweetsSpout extends BaseRichSpout {
 
         // Read from the beginning [more or less]
         // TODO should it be removed?
-        // properties.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+        properties.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "latest");
 
         // This could not be thread safe
         consumer = new KafkaConsumer<>(properties);
