@@ -11,6 +11,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -75,12 +77,14 @@ public class HashtagCounterBolt extends BaseRichBolt {
                     // close and save current window in the old one
                     HashMap<String, Integer> closingCounterMap = this.openLangCounterMap.get(lang);
 
-                    this.closedLangCounterMap.put(lang, new HashMap<String, Integer>());
-                    HashMap<String, Integer> tmpCounterMap = this.closedLangCounterMap.get(lang);
+                    HashMap<String, Integer> tmpCounterMap = new HashMap<>();
                     for (Map.Entry<String, Integer> hashtagCount : closingCounterMap.entrySet()) {
                         tmpCounterMap.put(hashtagCount.getKey(), hashtagCount.getValue());
                     }
+                    this.closedLangCounterMap.put(lang, tmpCounterMap);
                     closingCounterMap.clear();
+                    System.out.println("CLEANED " + this.openLangCounterMap.get(lang).keySet());
+                    // cleanup();
                 }
             } else {
                 // update counter for that language
@@ -97,12 +101,17 @@ public class HashtagCounterBolt extends BaseRichBolt {
     }
 
     public void cleanup() {
-        for (Map.Entry<String, HashMap<String, Integer>> entry : this.openLangCounterMap.entrySet()) {
+        System.out.println("cleanup");
+        for (Map.Entry<String, HashMap<String, Integer>> entry : this.closedLangCounterMap.entrySet()) {
             Map<String, Integer> counterMap = entry.getValue();
             String lang = entry.getKey();
 
             String[] hashtags = new String[HashtagCounterBolt.N_RESULT];
             int[] counts = new int[HashtagCounterBolt.N_RESULT];
+
+            ArrayList<String> hashtagsIter = new ArrayList<>(counterMap.keySet());
+            Collections.sort(hashtagsIter);
+            System.out.println("SORTED\t" + hashtagsIter);
 
             // instead of ordering O(nlogn) simply look for the 3 most present hashtags each time
             // TODO in case of tie wins the alphabetical order => order the map..
@@ -110,15 +119,16 @@ public class HashtagCounterBolt extends BaseRichBolt {
                 String hashtag = "null";
                 int count = 0;
 
-                for (Map.Entry<String, Integer> hashtagCount : counterMap.entrySet()) {
-                    if (hashtagCount.getValue() > count) {
-                        hashtag = hashtagCount.getKey();
-                        count = hashtagCount.getValue();
+                for (String hashtagIter : hashtagsIter) {
+                    int hashtagCount = counterMap.get(hashtagIter);
+                    if (hashtagCount > count) {
+                        hashtag = hashtagIter;
+                        count = hashtagCount;
                     }
                 }
                 hashtags[i] = hashtag;
                 counts[i] = count;
-                counterMap.remove(hashtag);
+                hashtagsIter.remove(hashtag);
             }
 
             String r = "";

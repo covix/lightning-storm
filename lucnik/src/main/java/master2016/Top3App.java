@@ -16,7 +16,7 @@ public class Top3App {
             // TODO only for debug, then remove it
 
             // langlist = "en:christmas";
-            langlist = "en:christmas,it:natale,de:weihnachten,es:navidad";
+            langlist = "en:2016MAMA,it:natale,de:weihnachten,es:navidad";
 
             // TODO need to start using it
             kafkaBrokerUrl = "";
@@ -54,7 +54,7 @@ public class Top3App {
 
         LocalCluster cluster = new LocalCluster();
         cluster.submitTopology("topologyName", config, builder.createTopology());
-        Thread.sleep(60 * 1000);
+        Thread.sleep(40 * 1000);
         cluster.shutdown();
     }
 }

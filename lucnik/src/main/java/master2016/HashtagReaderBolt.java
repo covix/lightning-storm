@@ -51,10 +51,16 @@ public class HashtagReaderBolt extends BaseRichBolt {
 
             for (HashtagEntity hashtag : tweet.getHashtagEntities()) {
                 // TODO shall we emit lowercase hashtags? YES! (at least for the internal comparison?
-                System.out.println("Hashtag: " + hashtag.getText());
+                // TODO shouldn't send lowercase hashtags
                 System.out.println("#### TEST " + keyword + " " + hashtag.getText());
 
-                if (keyword.equals(hashtag.getText().toLowerCase())) {
+
+                if (lang.equals("en")) {
+                    System.out.println("LANGIT\t" + hashtag.getText());
+                }
+
+
+                if (keyword.equals(hashtag.getText())) {
                     // there's no need to stop the window (a closing keyword is also an opening
                     // languageWindow.put(lang, !languageWindow.get(lang));
                     languageWindow.put(lang, true);
@@ -62,7 +68,7 @@ public class HashtagReaderBolt extends BaseRichBolt {
                 }
 
                 if (this.languageWindow.get(lang)) {
-                    this.collector.emit(new Values(lang, hashtag.getText().toLowerCase()));
+                    this.collector.emit(new Values(lang, hashtag.getText()));
                     System.out.println("I EMIT: " + hashtag.getText());
                 }
             }

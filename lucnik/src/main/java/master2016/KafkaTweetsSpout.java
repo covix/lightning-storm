@@ -35,7 +35,7 @@ public class KafkaTweetsSpout extends BaseRichSpout {
         // TODO move hardcoded arguments to the topology
         Properties properties = new Properties();
         properties.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092,localhost:9093,localhost:9094");
-        properties.put("group.id", "myGroup");
+        properties.put("group.id", "twitterGroup");
         properties.put("enable.auto.commit", "true");
         properties.put("auto.commit.interval.ms", "1000");
         properties.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
