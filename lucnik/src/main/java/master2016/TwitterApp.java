@@ -42,13 +42,13 @@ public class TwitterApp {
             kafkaBrokerUrls = "localhost:9092";
             filename = Paths.get("data", "tweets.txt").toString();
         } else {
-            mode = Integer.parseInt(args[1]);
-            consumerKey = args[2];
-            consumerSecret = args[3];
-            accessToken = args[4];
-            accessTokenSecret = args[5];
-            kafkaBrokerUrls = args[6];
-            filename = args[7];
+            mode = Integer.parseInt(args[0]);
+            consumerKey = args[1];
+            consumerSecret = args[2];
+            accessToken = args[3];
+            accessTokenSecret = args[4];
+            kafkaBrokerUrls = args[5];
+            filename = args[6];
         }
         initKafkaProducer(kafkaBrokerUrls);
 

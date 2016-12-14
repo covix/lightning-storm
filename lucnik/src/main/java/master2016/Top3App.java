@@ -21,19 +21,17 @@ public class Top3App {
             topologyName = "hello-storm";
             outputFolder = "/tmp/";
         } else {
-            langlist = args[1];
-            kafkaBrokerUrls = args[2];
-            topologyName = args[3];
-            outputFolder = args[4];
+            langlist = args[0];
+            kafkaBrokerUrls = args[1];
+            topologyName = args[2];
+            outputFolder = args[3];
         }
 
 
         Config config = new Config();
-
         config.setDebug(true);
 
         TopologyBuilder builder = new TopologyBuilder();
-
         builder.setSpout("kafka-twitter-spout", new KafkaTweetsSpout(kafkaBrokerUrls));
 
         builder.setBolt("twitter-hashtag-reader-bolt", new HashtagReaderBolt(langlist)).shuffleGrouping("kafka-twitter-spout");
@@ -41,12 +39,9 @@ public class Top3App {
         builder.setBolt("twitter-hashtag-counter-bolt", new HashtagCounterBolt(langlist))
                 .fieldsGrouping("twitter-hashtag-reader-bolt", new Fields("lang"));
 
+
         builder.setBolt("output-writer-bolt", new OutputWriterBolt(langlist, outputFolder))
                 .fieldsGrouping("twitter-hashtag-counter-bolt", new Fields("lang"));
-
-
-        // builder.setBolt("debug-bolt", new DebugBolt())
-        // .shuffleGrouping("twitter-spout");
 
         // LocalCluster cluster = new LocalCluster();
         // cluster.submitTopology(topologyName, config, builder.createTopology());

@@ -66,10 +66,14 @@ public class KafkaTweetsSpout extends BaseRichSpout {
                     Status status = TwitterObjectFactory.createStatus(record.value());
 
                     // non blocking operation
-                    collector.emit(new Values(status));
+                    collector.emit(new Values(status), count);
 
                     // System.out.println("[KAFKA] emitted");
                     count += 1;
+
+                    if (count == Integer.MAX_VALUE) {
+                        count = 0;
+                    }
 
                 } catch (TwitterException e) {
                     // e.printStackTrace();
@@ -85,6 +89,11 @@ public class KafkaTweetsSpout extends BaseRichSpout {
         // TODO check it
         ret.setMaxTaskParallelism(1);
         return ret;
+    }
+
+    public void ack(Object msgId) {
+        //  msgId should be "ID 6"
+        // System.out.println("[HelloWorldSpout] ack on msgId" + msgId);
     }
 
     public void declareOutputFields(OutputFieldsDeclarer declarer) {
