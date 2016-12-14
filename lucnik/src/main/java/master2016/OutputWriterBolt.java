@@ -34,12 +34,14 @@ class OutputWriterBolt extends BaseRichBolt {
         String[] langs = this.langList.split(",");
         for (String langKeyword : langs) {
             String lang = langKeyword.split(":")[0];
+
             File outputPath = Paths.get(this.outputFolder, lang + "_" + OutputWriterBolt.GROUP_ID + ".log").toFile();
 
             FileWriter fw = null;
             try {
                 fw = new FileWriter(outputPath);
             } catch (IOException e) {
+                System.out.println("ERRLANG " + lang);
                 e.printStackTrace();
             }
             BufferedWriter bw = new BufferedWriter(fw);
@@ -91,6 +93,8 @@ class OutputWriterBolt extends BaseRichBolt {
 
         System.out.println(windowNumber + "," + lang + "," + r);
         this.langWriter.get(lang).println(windowNumber + "," + lang + "," + r);
+        System.out.println("ACKED");
+        this.collector.ack(tuple);
     }
 
     public void declareOutputFields(OutputFieldsDeclarer declarer) {

@@ -63,7 +63,7 @@ public class HashtagReaderBolt extends BaseRichBolt {
                 if (keyword.equals(hashtag.getText())) {
                     // there's no need to stop the window (a closing keyword is also an opening
                     // languageWindow.put(lang, !languageWindow.get(lang));
-                    languageWindow.put(lang, true);
+                    this.languageWindow.put(lang, true);
                     System.out.println("WINDOW: " + this.languageWindow.get(lang));
                 }
 
@@ -73,6 +73,7 @@ public class HashtagReaderBolt extends BaseRichBolt {
                 }
             }
         }
+        this.collector.ack(tuple);
     }
 
     public void declareOutputFields(OutputFieldsDeclarer declarer) {

@@ -2,47 +2,39 @@ package master2016;
 
 import org.apache.storm.Config;
 import org.apache.storm.LocalCluster;
+import org.apache.storm.StormSubmitter;
 import org.apache.storm.topology.TopologyBuilder;
 import org.apache.storm.tuple.Fields;
 
 public class Top3App {
     public static void main(String[] args) throws Exception {
         String langlist;
-        String kafkaBrokerUrl;
+        String kafkaBrokerUrls;
         String topologyName;
         String outputFolder;
 
         if (args.length == 0) {
             // TODO only for debug, then remove it
-
-            langlist = "en:2016MAMA";
-            // langlist = "en:christmas,it:natale,de:weihnachten,es:navidad";
-
-            // TODO need to start using it
-            kafkaBrokerUrl = "";
+            // langlist = "en:2016MAMA";
+            langlist = "en:ALDUBTwinsFever,it:natale,de:weihnachten,es:navidad";
+            kafkaBrokerUrls = "localhost:9092";
             topologyName = "hello-storm";
-
-            // TODO pass to the hashtag counter bolt
-            outputFolder = "output";
+            outputFolder = "/tmp/";
         } else {
             langlist = args[1];
-            kafkaBrokerUrl = args[2];
+            kafkaBrokerUrls = args[2];
             topologyName = args[3];
             outputFolder = args[4];
         }
 
-        // String[] langWithKeywords = langlist.split(",");
 
         Config config = new Config();
 
-        // Window try
-        // config.put("my.keyWord", keyWord);
-
-        config.setDebug(false);
+        config.setDebug(true);
 
         TopologyBuilder builder = new TopologyBuilder();
 
-        builder.setSpout("kafka-twitter-spout", new KafkaTweetsSpout());
+        builder.setSpout("kafka-twitter-spout", new KafkaTweetsSpout(kafkaBrokerUrls));
 
         builder.setBolt("twitter-hashtag-reader-bolt", new HashtagReaderBolt(langlist)).shuffleGrouping("kafka-twitter-spout");
 
@@ -56,11 +48,11 @@ public class Top3App {
         // builder.setBolt("debug-bolt", new DebugBolt())
         // .shuffleGrouping("twitter-spout");
 
-        LocalCluster cluster = new LocalCluster();
-        cluster.submitTopology(topologyName, config, builder.createTopology());
-        Thread.sleep(30 * 1000);
-        cluster.shutdown();
+        // LocalCluster cluster = new LocalCluster();
+        // cluster.submitTopology(topologyName, config, builder.createTopology());
+        // Thread.sleep(60 * 1000);
+        // cluster.shutdown();
 
-        // StormSubmitter.submitTopology(topologyName, config, builder.createTopology());
+        StormSubmitter.submitTopology(topologyName, config, builder.createTopology());
     }
 }

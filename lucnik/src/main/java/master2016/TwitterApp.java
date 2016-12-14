@@ -27,19 +27,19 @@ public class TwitterApp {
         String consumerSecret;
         String accessToken;
         String accessTokenSecret;
-        String kafkaBrokerUrl;
+        String kafkaBrokerUrls;
         String filename;
 
         if (args.length == 0) {
             // TODO remove after startTwitterApp.sh is finished
-            // mode = Mode.TWITTER;
-            mode = Mode.LOGFILE;
+            mode = Mode.TWITTER;
+            // mode = Mode.LOGFILE;
 
             consumerKey = "HZldFa2RQ8ByVPa5wTl7UKvQR";
             consumerSecret = "ZwhQSj37kpq6vCRRShBwfK32iB58QnrcidnJJvxF5vzzxPSISM";
             accessToken = "3936335896-DiNCA5l1tQabWe12V45yrARVG87bMGiHA9LzWBA";
             accessTokenSecret = "fjeAmE1ZiY6Z34v5ioc32yh49HklHYNyIGFanPxWvqImw";
-            kafkaBrokerUrl = null;
+            kafkaBrokerUrls = "localhost:9092";
             filename = Paths.get("data", "tweets.txt").toString();
         } else {
             mode = Integer.parseInt(args[1]);
@@ -47,10 +47,10 @@ public class TwitterApp {
             consumerSecret = args[3];
             accessToken = args[4];
             accessTokenSecret = args[5];
-            kafkaBrokerUrl = args[6];
+            kafkaBrokerUrls = args[6];
             filename = args[7];
         }
-        initKafkaProducer();
+        initKafkaProducer(kafkaBrokerUrls);
 
         if (mode == Mode.TWITTER) {
             readFromTwitter(consumerKey, consumerSecret, accessToken, accessTokenSecret);
@@ -61,9 +61,9 @@ public class TwitterApp {
         }
     }
 
-    private static void initKafkaProducer() {
+    private static void initKafkaProducer(String brokerUrls) {
         Properties props = new Properties();
-        props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092,localhost:9093,localhost:9094");
+        props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, brokerUrls);
         props.put("acks", "all");
         props.put("retries", 0);
         props.put("batch.size", 16384);
@@ -75,10 +75,12 @@ public class TwitterApp {
     }
 
     private static void readFromLogFile(String filename) throws IOException {
-        BufferedReader tfbr = new BufferedReader(new FileReader(filename));
-        String line;
-        while ((line = tfbr.readLine()) != null) {
-            writeTweetToKafka(line);
+        for (int i = 0; i < 10; i++) {
+            BufferedReader tfbr = new BufferedReader(new FileReader(filename));
+            String line;
+            while ((line = tfbr.readLine()) != null) {
+                writeTweetToKafka(line);
+            }
         }
         closeKafkaProductor();
     }

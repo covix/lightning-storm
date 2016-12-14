@@ -25,30 +25,31 @@ public class KafkaTweetsSpout extends BaseRichSpout {
 
     private SpoutOutputCollector collector;
     private KafkaConsumer<String, String> consumer;
+    private String kafkaBrokerUrls;
 
-    private int numRecordsWindow = 0;
-    private int totalTutple = 0;
+    public KafkaTweetsSpout(String kafkaBrokerUrls) {
+        this.kafkaBrokerUrls = kafkaBrokerUrls;
+    }
 
     public void open(Map conf, TopologyContext context, SpoutOutputCollector collector) {
         System.out.println("[KAFKA] opening method called");
 
         // TODO move hardcoded arguments to the topology
         Properties properties = new Properties();
-        properties.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092,localhost:9093,localhost:9094");
-        properties.put("group.id", "twitterGroup");
+        properties.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaBrokerUrls);
+        properties.put("group.id", "twitterGroup2");
         properties.put("enable.auto.commit", "true");
         properties.put("auto.commit.interval.ms", "1000");
         properties.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
         properties.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
 
-        // Read from the beginning [more or less]
         // TODO should it be removed?
-        properties.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "latest");
+        properties.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
 
         // This could not be thread safe
         consumer = new KafkaConsumer<>(properties);
 
-        consumer.subscribe(Arrays.asList("twitter"));
+        consumer.subscribe(Collections.singletonList("twitter"));
         this.collector = collector;
     }
 
@@ -60,7 +61,6 @@ public class KafkaTweetsSpout extends BaseRichSpout {
 
         if (!records.isEmpty()) {
             int count = 0;
-            this.numRecordsWindow += 1;
             for (ConsumerRecord<String, String> record : records) {
                 try {
                     Status status = TwitterObjectFactory.createStatus(record.value());
@@ -75,9 +75,7 @@ public class KafkaTweetsSpout extends BaseRichSpout {
                     // e.printStackTrace();
                 }
             }
-            this.totalTutple += count;
             // System.out.println("[KAFKA] window of: " + count );
-            double avg = this.totalTutple / this.numRecordsWindow;
             // System.out.println("[KAFKA] avg: " + avg);
         }
     }

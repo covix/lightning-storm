@@ -30,7 +30,7 @@
             <artifactId>storm-core</artifactId>
             <version>1.0.2</version>
             <!--Provided is for production, in local mode does not work-->
-            <!--<scope>provided</scope>-->
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.kafka</groupId>
