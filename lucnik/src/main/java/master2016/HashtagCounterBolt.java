@@ -61,11 +61,9 @@ public class HashtagCounterBolt extends BaseRichBolt {
         String hashtag = tuple.getStringByField("hashtag");
 
         if (keyword.equals(hashtag)) {
-            if (!languageWindow.get(lang)) {
+            if (!this.languageWindow.get(lang)) {  // if the window was previously closed
                 this.languageWindow.put(lang, true);
-            }
-
-            if (this.languageWindow.get(lang)) {
+            } else {
                 this.langWindowNumber.put(lang, this.langWindowNumber.get(lang) + 1);
                 // close and save current window in the old one
                 HashMap<String, Integer> closingCounterMap = this.openLangCounterMap.get(lang);
