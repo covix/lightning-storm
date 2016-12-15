@@ -29,11 +29,9 @@ public class HashtagCounterBolt extends BaseRichBolt {
     private OutputCollector collector;
 
     public HashtagCounterBolt(String langList) {
-        // TODO Move definition to prepare
         this.languageWindow = new HashMap<>();
         this.languageKeyword = new HashMap<>();
         this.openLangCounterMap = new HashMap<>();
-        // TODO initialize to some sort of 0,null,0,null
         this.closedLangCounterMap = new HashMap<>();
         this.langWindowNumber = new HashMap<>();
 
@@ -52,7 +50,6 @@ public class HashtagCounterBolt extends BaseRichBolt {
 
     public void prepare(Map conf, TopologyContext context, OutputCollector collector) {
         this.collector = collector;
-        // keyWord = (String) conf.get("my.keyWord");
     }
 
     public void execute(Tuple tuple) {

@@ -3,6 +3,7 @@ package master2016;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.clients.producer.RecordMetadata;
 import twitter4j.*;
 import twitter4j.auth.AccessToken;
 import twitter4j.conf.ConfigurationBuilder;
@@ -12,6 +13,8 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.Properties;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 
 public class TwitterApp {
     private static class Mode {
@@ -21,7 +24,7 @@ public class TwitterApp {
 
     private static KafkaProducer<String, String> prod;
 
-    public static void main(String[] args) throws TwitterException, IOException {
+    public static void main(String[] args) throws TwitterException, IOException, ExecutionException, InterruptedException {
         int mode;
         String consumerKey;
         String consumerSecret;
@@ -32,8 +35,8 @@ public class TwitterApp {
 
         if (args.length == 0) {
             // TODO remove after startTwitterApp.sh is finished
-            mode = Mode.TWITTER;
-            // mode = Mode.LOGFILE;
+            // mode = Mode.TWITTER;
+            mode = Mode.LOGFILE;
 
             consumerKey = "HZldFa2RQ8ByVPa5wTl7UKvQR";
             consumerSecret = "ZwhQSj37kpq6vCRRShBwfK32iB58QnrcidnJJvxF5vzzxPSISM";
@@ -74,19 +77,18 @@ public class TwitterApp {
         prod = new KafkaProducer<>(props);
     }
 
-    private static void readFromLogFile(String filename) throws IOException {
+    private static void readFromLogFile(String filename) throws IOException, ExecutionException, InterruptedException {
         for (int i = 0; i < 10; i++) {
             BufferedReader tfbr = new BufferedReader(new FileReader(filename));
             String line;
             while ((line = tfbr.readLine()) != null) {
-                writeTweetToKafka(line);
+                writeTweetToKafka(line, true);
             }
         }
         closeKafkaProductor();
     }
 
     private static void readFromTwitter(String consumerKey, String consumerSecret, String accessToken, String accessTokenSecret) {
-        // TODO should it ever end? If so, call close!
         TwitterStream twitterStream;
         twitterStream = new TwitterStreamFactory(
                 new ConfigurationBuilder().setJSONStoreEnabled(true).build())
@@ -96,7 +98,11 @@ public class TwitterApp {
             public void onStatus(Status status) {
                 // System.out.println(status.getLang() + ": " + "@" + status.getUser().getScreenName() + " - " + status.getText());
                 String jsonStatus = TwitterObjectFactory.getRawJSON(status);
-                writeTweetToKafka(jsonStatus);
+                try {
+                    writeTweetToKafka(jsonStatus);
+                } catch (ExecutionException | InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
 
             public void onDeletionNotice(StatusDeletionNotice statusDeletionNotice) {
@@ -126,11 +132,14 @@ public class TwitterApp {
         twitterStream.setOAuthAccessToken(token);
 
         // FilterQuery tweetFilterQuery = new FilterQuery();
-        // TODO read actual tweets (not sample). (it could also be right/enough).
         twitterStream.sample();
     }
 
-    private static void writeTweetToKafka(String tweet) {
+    private static void writeTweetToKafka(String tweet) throws ExecutionException, InterruptedException {
+        writeTweetToKafka(tweet, false);
+    }
+
+    private static void writeTweetToKafka(String tweet, boolean wait) throws ExecutionException, InterruptedException {
         String topic = "twitter";
         int partition = 0;
         // From the Docs:
@@ -140,7 +149,12 @@ public class TwitterApp {
         // TODO check whether all tweets are written to kafka
         // adding .get() at the returned object will make the method synchronous.
         // without it, the application won't wait for it before terminating
-        prod.send(new ProducerRecord<>(topic, partition, key, tweet));
+        Future<RecordMetadata> send = prod.send(new ProducerRecord<>(topic, partition, key, tweet));
+
+        // TODO this slows thigs down, but should ensure the write of all the tweets
+        if (wait) {
+            send.get();
+        }
     }
 
     private static void closeKafkaProductor() {

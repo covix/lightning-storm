@@ -36,14 +36,15 @@ public class KafkaTweetsSpout extends BaseRichSpout {
 
         // TODO move hardcoded arguments to the topology
         Properties properties = new Properties();
-        properties.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaBrokerUrls);
-        properties.put("group.id", "twitterGroup2");
+        properties.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, this.kafkaBrokerUrls);
+        // TODO set static group.id
+        properties.put("group.id", ((Long) System.currentTimeMillis()).toString());
+        // TODO true or false?
         properties.put("enable.auto.commit", "true");
         properties.put("auto.commit.interval.ms", "1000");
         properties.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
         properties.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
 
-        // TODO should it be removed?
         properties.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
 
         // This could not be thread safe
@@ -66,14 +67,10 @@ public class KafkaTweetsSpout extends BaseRichSpout {
                     Status status = TwitterObjectFactory.createStatus(record.value());
 
                     // non blocking operation
-                    collector.emit(new Values(status), count);
+                    collector.emit(new Values(status));
 
                     // System.out.println("[KAFKA] emitted");
                     count += 1;
-
-                    if (count == Integer.MAX_VALUE) {
-                        count = 0;
-                    }
 
                 } catch (TwitterException e) {
                     // e.printStackTrace();
@@ -82,18 +79,6 @@ public class KafkaTweetsSpout extends BaseRichSpout {
             // System.out.println("[KAFKA] window of: " + count );
             // System.out.println("[KAFKA] avg: " + avg);
         }
-    }
-
-    public Map<String, Object> getComponentConfiguration() {
-        Config ret = new Config();
-        // TODO check it
-        ret.setMaxTaskParallelism(1);
-        return ret;
-    }
-
-    public void ack(Object msgId) {
-        //  msgId should be "ID 6"
-        // System.out.println("[HelloWorldSpout] ack on msgId" + msgId);
     }
 
     public void declareOutputFields(OutputFieldsDeclarer declarer) {

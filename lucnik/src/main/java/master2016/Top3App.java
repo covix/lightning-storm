@@ -16,7 +16,7 @@ public class Top3App {
         if (args.length == 0) {
             // TODO only for debug, then remove it
             // langlist = "en:2016MAMA";
-            langlist = "en:ALDUBTwinsFever,it:natale,de:weihnachten,es:navidad";
+            langlist = "en:ALDUBTwinsFever,jp:morgan,de:weihnachten,es:navidad";
             kafkaBrokerUrls = "localhost:9092";
             topologyName = "hello-storm";
             outputFolder = "/tmp/";
@@ -34,7 +34,8 @@ public class Top3App {
         TopologyBuilder builder = new TopologyBuilder();
         builder.setSpout("kafka-twitter-spout", new KafkaTweetsSpout(kafkaBrokerUrls));
 
-        builder.setBolt("twitter-hashtag-reader-bolt", new HashtagReaderBolt(langlist)).shuffleGrouping("kafka-twitter-spout");
+        builder.setBolt("twitter-hashtag-reader-bolt", new HashtagReaderBolt(langlist), 3)
+                .shuffleGrouping("kafka-twitter-spout");
 
         builder.setBolt("twitter-hashtag-counter-bolt", new HashtagCounterBolt(langlist))
                 .fieldsGrouping("twitter-hashtag-reader-bolt", new Fields("lang"));

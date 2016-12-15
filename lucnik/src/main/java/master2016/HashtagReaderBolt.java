@@ -2,6 +2,7 @@ package master2016;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 
 import twitter4j.Status;
 import twitter4j.HashtagEntity;
@@ -47,18 +48,35 @@ public class HashtagReaderBolt extends BaseRichBolt {
 
         // TODO This is for debug, but it could be left here for robustness
         if (this.languageKeyword.containsKey(lang)) {
-            String keyword = this.languageKeyword.get(lang);
+            final String keyword = this.languageKeyword.get(lang);
 
             for (HashtagEntity hashtag : tweet.getHashtagEntities()) {
-                // TODO shall we emit lowercase hashtags? YES! (at least for the internal comparison?
-                // TODO shouldn't send lowercase hashtags
-                System.out.println("#### TEST " + keyword + " " + hashtag.getText());
+                // TODO remove fake hashtags
+                if (new Random().nextDouble() > .9) {
+                    System.out.println("Fake it 'till you make it");
+                    hashtag = new HashtagEntity() {
+                        @Override
+                        public String getText() {
+                            return keyword;
+                        }
 
+                        @Override
+                        public int getStart() {
+                            return 0;
+                        }
+
+                        @Override
+                        public int getEnd() {
+                            return 0;
+                        }
+                    };
+                }
+
+                System.out.println("#### TEST " + keyword + " " + hashtag.getText());
 
                 if (lang.equals("en")) {
                     System.out.println("LANGIT\t" + hashtag.getText());
                 }
-
 
                 if (keyword.equals(hashtag.getText())) {
                     // there's no need to stop the window (a closing keyword is also an opening

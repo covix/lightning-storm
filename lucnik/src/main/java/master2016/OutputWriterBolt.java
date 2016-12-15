@@ -30,7 +30,6 @@ class OutputWriterBolt extends BaseRichBolt {
         this.collector = collector;
         this.langWriter = new HashMap<>();
 
-        // TODO is it working with UTF-8
         String[] langs = this.langList.split(",");
         for (String langKeyword : langs) {
             String lang = langKeyword.split(":")[0];
@@ -65,7 +64,6 @@ class OutputWriterBolt extends BaseRichBolt {
         System.out.println("SORTED\t" + hashtagsIter);
 
         // instead of ordering O(nlogn) simply look for the 3 most present hashtags each time
-        // TODO in case of tie wins the alphabetical order => order the map..
         for (int i = 0; i < OutputWriterBolt.N_RESULT; i++) {
             String hashtag = "null";
             int count = 0;
@@ -87,9 +85,6 @@ class OutputWriterBolt extends BaseRichBolt {
             r += hashtags[i] + "," + counts[i] + ",";
         }
         r = r.substring(0, r.length() - 1);
-
-        // TODO what if tweets for a given language are not found? should we create the file anyway?
-        // TODO shall we initialize langCounterMap with the list of languages?
 
         System.out.println(windowNumber + "," + lang + "," + r);
         this.langWriter.get(lang).println(windowNumber + "," + lang + "," + r);
