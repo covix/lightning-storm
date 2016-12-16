@@ -4,21 +4,13 @@ import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
-import org.apache.storm.Config;
 import org.apache.storm.spout.SpoutOutputCollector;
 import org.apache.storm.task.TopologyContext;
 import org.apache.storm.topology.OutputFieldsDeclarer;
 import org.apache.storm.topology.base.BaseRichSpout;
 import org.apache.storm.tuple.Fields;
 import org.apache.storm.tuple.Values;
-import org.apache.storm.utils.Utils;
-import twitter4j.Status;
-import twitter4j.TwitterException;
-import twitter4j.TwitterObjectFactory;
 
-import java.awt.*;
-import java.awt.image.ImagingOpException;
-import java.text.SimpleDateFormat;
 import java.util.*;
 
 public class KafkaTweetsSpout extends BaseRichSpout {
@@ -26,14 +18,11 @@ public class KafkaTweetsSpout extends BaseRichSpout {
     private SpoutOutputCollector collector;
     private KafkaConsumer<String, String> consumer;
     private String kafkaBrokerUrls;
-    private String[] languages;
+    private String lang;
 
-    public KafkaTweetsSpout(String kafkaBrokerUrls, String langList) {
+    public KafkaTweetsSpout(String kafkaBrokerUrls, String lang) {
         this.kafkaBrokerUrls = kafkaBrokerUrls;
-        this.languages = langList.split(",");
-        for (int i = 0; i < this.languages.length; i++) {
-            this.languages[i] = this.languages[i].split(":")[0];
-        }
+        this.lang = lang;
     }
 
     public void open(Map conf, TopologyContext context, SpoutOutputCollector collector) {
@@ -53,7 +42,7 @@ public class KafkaTweetsSpout extends BaseRichSpout {
         // This could not be thread safe
         consumer = new KafkaConsumer<>(properties);
 
-        consumer.subscribe(Arrays.asList(this.languages));
+        consumer.subscribe(Collections.singletonList(this.lang));
         this.collector = collector;
     }
 
