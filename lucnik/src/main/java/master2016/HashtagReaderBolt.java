@@ -43,52 +43,34 @@ public class HashtagReaderBolt extends BaseRichBolt {
     }
 
     public void execute(Tuple tuple) {
-        Status tweet = (Status) tuple.getValueByField("tweet");
-        String lang = tweet.getLang();
+        String lang = tuple.getStringByField("lang");
+        String hashtag = tuple.getStringByField("hashtag");
 
         // TODO This is for debug, but it could be left here for robustness
         if (this.languageKeyword.containsKey(lang)) {
             final String keyword = this.languageKeyword.get(lang);
 
-            for (HashtagEntity hashtag : tweet.getHashtagEntities()) {
-                // TODO remove fake hashtags
-                if (new Random().nextDouble() > .9) {
-                    System.out.println("Fake it 'till you make it");
-                    hashtag = new HashtagEntity() {
-                        @Override
-                        public String getText() {
-                            return keyword;
-                        }
+            if (new Random().nextDouble() > .9) {
+                System.out.println("Fake it 'till you make it");
+                hashtag = keyword;
+            }
 
-                        @Override
-                        public int getStart() {
-                            return 0;
-                        }
+            System.out.println("#### TEST " + keyword + " " + hashtag);
 
-                        @Override
-                        public int getEnd() {
-                            return 0;
-                        }
-                    };
-                }
+            if (lang.equals("en")) {
+                System.out.println("LANGIT\t" + hashtag);
+            }
 
-                System.out.println("#### TEST " + keyword + " " + hashtag.getText());
+            if (keyword.equals(hashtag)) {
+                // there's no need to stop the window (a closing keyword is also an opening
+                // languageWindow.put(lang, !languageWindow.get(lang));
+                this.languageWindow.put(lang, true);
+                System.out.println("WINDOW: " + this.languageWindow.get(lang));
+            }
 
-                if (lang.equals("en")) {
-                    System.out.println("LANGIT\t" + hashtag.getText());
-                }
-
-                if (keyword.equals(hashtag.getText())) {
-                    // there's no need to stop the window (a closing keyword is also an opening
-                    // languageWindow.put(lang, !languageWindow.get(lang));
-                    this.languageWindow.put(lang, true);
-                    System.out.println("WINDOW: " + this.languageWindow.get(lang));
-                }
-
-                if (this.languageWindow.get(lang)) {
-                    this.collector.emit(new Values(lang, hashtag.getText()));
-                    System.out.println("I EMIT: " + hashtag.getText());
-                }
+            if (this.languageWindow.get(lang)) {
+                this.collector.emit(new Values(lang, hashtag));
+                System.out.println("I EMIT: " + hashtag);
             }
         }
         this.collector.ack(tuple);

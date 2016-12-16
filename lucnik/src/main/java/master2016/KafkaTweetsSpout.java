@@ -26,9 +26,14 @@ public class KafkaTweetsSpout extends BaseRichSpout {
     private SpoutOutputCollector collector;
     private KafkaConsumer<String, String> consumer;
     private String kafkaBrokerUrls;
+    private String[] languages;
 
-    public KafkaTweetsSpout(String kafkaBrokerUrls) {
+    public KafkaTweetsSpout(String kafkaBrokerUrls, String langList) {
         this.kafkaBrokerUrls = kafkaBrokerUrls;
+        this.languages = langList.split(",");
+        for (int i = 0; i < this.languages.length; i++) {
+            this.languages[i] = this.languages[i].split(":")[0];
+        }
     }
 
     public void open(Map conf, TopologyContext context, SpoutOutputCollector collector) {
@@ -50,7 +55,7 @@ public class KafkaTweetsSpout extends BaseRichSpout {
         // This could not be thread safe
         consumer = new KafkaConsumer<>(properties);
 
-        consumer.subscribe(Collections.singletonList("twitter"));
+        consumer.subscribe(Arrays.asList(this.languages));
         this.collector = collector;
     }
 
@@ -63,25 +68,20 @@ public class KafkaTweetsSpout extends BaseRichSpout {
         if (!records.isEmpty()) {
             int count = 0;
             for (ConsumerRecord<String, String> record : records) {
-                try {
-                    Status status = TwitterObjectFactory.createStatus(record.value());
+                String lang = record.topic();
+                String hashtag = record.value();
 
-                    // non blocking operation
-                    collector.emit(new Values(status));
+                // non blocking operation
+                collector.emit(new Values(lang, hashtag));
 
-                    // System.out.println("[KAFKA] emitted");
-                    count += 1;
+                // System.out.println("[KAFKA] emitted");
+                count += 1;
 
-                } catch (TwitterException e) {
-                    // e.printStackTrace();
-                }
             }
-            // System.out.println("[KAFKA] window of: " + count );
-            // System.out.println("[KAFKA] avg: " + avg);
         }
     }
 
     public void declareOutputFields(OutputFieldsDeclarer declarer) {
-        declarer.declare(new Fields("tweet"));
+        declarer.declare(new Fields("lang", "hashtag"));
     }
 }

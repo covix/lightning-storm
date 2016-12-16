@@ -32,10 +32,10 @@ public class Top3App {
         config.setDebug(true);
 
         TopologyBuilder builder = new TopologyBuilder();
-        builder.setSpout("kafka-twitter-spout", new KafkaTweetsSpout(kafkaBrokerUrls));
+        builder.setSpout("kafka-twitter-spout", new KafkaTweetsSpout(kafkaBrokerUrls, langlist));
 
         builder.setBolt("twitter-hashtag-reader-bolt", new HashtagReaderBolt(langlist), 3)
-                .shuffleGrouping("kafka-twitter-spout");
+                .fieldsGrouping("kafka-twitter-spout", new Fields("lang"));
 
         builder.setBolt("twitter-hashtag-counter-bolt", new HashtagCounterBolt(langlist))
                 .fieldsGrouping("twitter-hashtag-reader-bolt", new Fields("lang"));

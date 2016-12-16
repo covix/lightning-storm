@@ -89,59 +89,6 @@ public class HashtagCounterBolt extends BaseRichBolt {
         this.collector.ack(tuple);
     }
 
-    // public void cleanup() {
-    //     System.out.println("cleanup");
-    //     for (Map.Entry<String, HashMap<String, Integer>> entry : this.closedLangCounterMap.entrySet()) {
-    //         Map<String, Integer> counterMap = entry.getValue();
-    //         String lang = entry.getKey();
-    //
-    //         String[] hashtags = new String[HashtagCounterBolt.N_RESULT];
-    //         int[] counts = new int[HashtagCounterBolt.N_RESULT];
-    //
-    //         ArrayList<String> hashtagsIter = new ArrayList<>(counterMap.keySet());
-    //         Collections.sort(hashtagsIter);
-    //         System.out.println("SORTED\t" + hashtagsIter);
-    //
-    //         // instead of ordering O(nlogn) simply look for the 3 most present hashtags each time
-    //         // TODO in case of tie wins the alphabetical order => order the map..
-    //         for (int i = 0; i < HashtagCounterBolt.N_RESULT; i++) {
-    //             String hashtag = "null";
-    //             int count = 0;
-    //
-    //             for (String hashtagIter : hashtagsIter) {
-    //                 int hashtagCount = counterMap.get(hashtagIter);
-    //                 if (hashtagCount > count) {
-    //                     hashtag = hashtagIter;
-    //                     count = hashtagCount;
-    //                 }
-    //             }
-    //             hashtags[i] = hashtag;
-    //             counts[i] = count;
-    //             hashtagsIter.remove(hashtag);
-    //         }
-    //
-    //         String r = "";
-    //         for (int i = 0; i < hashtags.length; i++) {
-    //             r += hashtags[i] + "," + counts[i] + ",";
-    //         }
-    //         r = r.substring(0, r.length() - 1);
-    //
-    //         // TODO what if tweets for a given language are not found? should we create the file anyway?
-    //         // TODO shall we initialize langCounterMap with the list of languages?
-    //
-    //         System.out.println(this.langWindowNumber.get(lang) + "," + lang + "," + r);
-    //         try {
-    //             File outputPath = Paths.get(this.outputFolder, lang + "_" + HashtagCounterBolt.GROUP_ID + ".log").toFile();
-    //             outputPath.getParentFile().mkdirs();
-    //             PrintWriter writer = new PrintWriter(outputPath, "UTF-8");
-    //             writer.println(this.langWindowNumber.get(lang) + "," + lang + "," + r);
-    //             writer.close();
-    //         } catch (IOException e) {
-    //             e.printStackTrace();
-    //         }
-    //     }
-    // }
-
     public void declareOutputFields(OutputFieldsDeclarer declarer) {
         declarer.declare(new Fields("lang", "map", "windowNumber"));
     }
