@@ -71,9 +71,7 @@ public class HashtagCounterBolt extends BaseRichBolt {
                 }
                 this.closedLangCounterMap.put(lang, tmpCounterMap);
                 closingCounterMap.clear();
-                System.out.println("CLEANED " + this.openLangCounterMap.get(lang).keySet());
                 // cleanup();
-                System.out.println("EMITIT");
                 this.collector.emit(new Values(lang, tmpCounterMap, this.langWindowNumber.get(lang)));
             }
         } else {

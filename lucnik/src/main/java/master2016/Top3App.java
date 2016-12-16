@@ -34,7 +34,7 @@ public class Top3App {
         TopologyBuilder builder = new TopologyBuilder();
         builder.setSpout("kafka-twitter-spout", new KafkaTweetsSpout(kafkaBrokerUrls, langlist));
 
-        builder.setBolt("twitter-hashtag-reader-bolt", new HashtagReaderBolt(langlist), 3)
+        builder.setBolt("twitter-hashtag-reader-bolt", new HashtagReaderBolt(langlist))
                 .fieldsGrouping("kafka-twitter-spout", new Fields("lang"));
 
         builder.setBolt("twitter-hashtag-counter-bolt", new HashtagCounterBolt(langlist))

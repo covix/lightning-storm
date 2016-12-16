@@ -40,7 +40,6 @@ class OutputWriterBolt extends BaseRichBolt {
             try {
                 fw = new FileWriter(outputPath);
             } catch (IOException e) {
-                System.out.println("ERRLANG " + lang);
                 e.printStackTrace();
             }
             BufferedWriter bw = new BufferedWriter(fw);
@@ -50,8 +49,6 @@ class OutputWriterBolt extends BaseRichBolt {
     }
 
     public void execute(Tuple tuple) {
-        System.out.println("SAVEIT");
-
         String lang = tuple.getStringByField("lang");
         HashMap<String, Integer> counterMap = (HashMap<String, Integer>) tuple.getValueByField("map");
         int windowNumber = (int) tuple.getValueByField("windowNumber");
@@ -61,7 +58,6 @@ class OutputWriterBolt extends BaseRichBolt {
 
         ArrayList<String> hashtagsIter = new ArrayList<>(counterMap.keySet());
         Collections.sort(hashtagsIter);
-        System.out.println("SORTED\t" + hashtagsIter);
 
         // instead of ordering O(nlogn) simply look for the 3 most present hashtags each time
         for (int i = 0; i < OutputWriterBolt.N_RESULT; i++) {
@@ -86,9 +82,7 @@ class OutputWriterBolt extends BaseRichBolt {
         }
         r = r.substring(0, r.length() - 1);
 
-        System.out.println(windowNumber + "," + lang + "," + r);
         this.langWriter.get(lang).println(windowNumber + "," + lang + "," + r);
-        System.out.println("ACKED");
         this.collector.ack(tuple);
     }
 

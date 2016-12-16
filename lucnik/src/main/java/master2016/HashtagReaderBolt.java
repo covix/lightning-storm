@@ -50,27 +50,20 @@ public class HashtagReaderBolt extends BaseRichBolt {
         if (this.languageKeyword.containsKey(lang)) {
             final String keyword = this.languageKeyword.get(lang);
 
-            if (new Random().nextDouble() > .9) {
-                System.out.println("Fake it 'till you make it");
-                hashtag = keyword;
-            }
-
-            System.out.println("#### TEST " + keyword + " " + hashtag);
-
-            if (lang.equals("en")) {
-                System.out.println("LANGIT\t" + hashtag);
-            }
+            // TODO remove fakeit
+            // if (new Random().nextDouble() > .9) {
+            //     System.out.println("Fake it 'till you make it");
+            //     hashtag = keyword;
+            // }
 
             if (keyword.equals(hashtag)) {
                 // there's no need to stop the window (a closing keyword is also an opening
                 // languageWindow.put(lang, !languageWindow.get(lang));
                 this.languageWindow.put(lang, true);
-                System.out.println("WINDOW: " + this.languageWindow.get(lang));
             }
 
             if (this.languageWindow.get(lang)) {
                 this.collector.emit(new Values(lang, hashtag));
-                System.out.println("I EMIT: " + hashtag);
             }
         }
         this.collector.ack(tuple);

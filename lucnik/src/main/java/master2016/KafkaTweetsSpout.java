@@ -37,8 +37,6 @@ public class KafkaTweetsSpout extends BaseRichSpout {
     }
 
     public void open(Map conf, TopologyContext context, SpoutOutputCollector collector) {
-        System.out.println("[KAFKA] opening method called");
-
         // TODO move hardcoded arguments to the topology
         Properties properties = new Properties();
         properties.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, this.kafkaBrokerUrls);
