@@ -22,7 +22,8 @@ public class TwitterApp {
         static int TWITTER = 2;
     }
 
-    private static KafkaProducer<String, String> prod;
+    private static KafkaProducer<String, String> tweetProducer;
+    private static KafkaProducer<String, Status> hashtagProducer;
 
     public static void main(String[] args) throws TwitterException, IOException, ExecutionException, InterruptedException {
         int mode;
@@ -74,18 +75,21 @@ public class TwitterApp {
         props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
         props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
 
-        prod = new KafkaProducer<>(props);
+        tweetProducer = new KafkaProducer<>(props);
+        hashtagProducer = new KafkaProducer<>(props);
     }
 
-    private static void readFromLogFile(String filename) throws IOException, ExecutionException, InterruptedException {
+    private static void readFromLogFile(String filename) throws IOException, ExecutionException, InterruptedException, TwitterException {
         for (int i = 0; i < 10; i++) {
             BufferedReader tfbr = new BufferedReader(new FileReader(filename));
             String line;
             while ((line = tfbr.readLine()) != null) {
-                writeTweetToKafka(line, true);
+                // writeTweetToKafka(line, true);
+                Status status = TwitterObjectFactory.createStatus(line);
+                writeHashtagsToKafka(status, true);
             }
         }
-        closeKafkaProductor();
+        closeKafkaProductors();
     }
 
     private static void readFromTwitter(String consumerKey, String consumerSecret, String accessToken, String accessTokenSecret) {
@@ -99,7 +103,8 @@ public class TwitterApp {
                 // System.out.println(status.getLang() + ": " + "@" + status.getUser().getScreenName() + " - " + status.getText());
                 String jsonStatus = TwitterObjectFactory.getRawJSON(status);
                 try {
-                    writeTweetToKafka(jsonStatus);
+                    // writeTweetToKafka(jsonStatus);
+                    writeHashtagsToKafka(status);
                 } catch (ExecutionException | InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -149,7 +154,7 @@ public class TwitterApp {
         // TODO check whether all tweets are written to kafka
         // adding .get() at the returned object will make the method synchronous.
         // without it, the application won't wait for it before terminating
-        Future<RecordMetadata> send = prod.send(new ProducerRecord<>(topic, partition, key, tweet));
+        Future<RecordMetadata> send = tweetProducer.send(new ProducerRecord<>(topic, partition, key, tweet));
 
         // TODO this slows thigs down, but should ensure the write of all the tweets
         if (wait) {
@@ -157,7 +162,24 @@ public class TwitterApp {
         }
     }
 
-    private static void closeKafkaProductor() {
-        prod.close();
+    private static void writeHashtagsToKafka(Status tweet) throws ExecutionException, InterruptedException {
+        writeHashtagsToKafka(tweet, false);
+    }
+
+    private static void writeHashtagsToKafka(Status tweet, boolean wait) throws ExecutionException, InterruptedException {
+        String topic = tweet.getLang();
+        int partition = 0;
+        String key = null;
+
+        Future<RecordMetadata> send = hashtagProducer.send(new ProducerRecord<>(topic, partition, key, tweet));
+
+        if (wait) {
+            send.get();
+        }
+    }
+
+    private static void closeKafkaProductors() {
+        tweetProducer.close();
+        hashtagProducer.close();
     }
 }
