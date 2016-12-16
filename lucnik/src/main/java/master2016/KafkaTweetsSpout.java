@@ -39,7 +39,6 @@ public class KafkaTweetsSpout extends BaseRichSpout {
 
         properties.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
 
-        // This could not be thread safe
         consumer = new KafkaConsumer<>(properties);
 
         consumer.subscribe(Collections.singletonList(this.lang));
@@ -47,23 +46,16 @@ public class KafkaTweetsSpout extends BaseRichSpout {
     }
 
     public void nextTuple() {
-        // System.out.println("[KAFKA] Someone asked for tuple!");
         // For polling check on the Docs.
         // https://kafka.apache.org/0100/javadoc/org/apache/kafka/clients/consumer/KafkaConsumer.html#poll(long)
         ConsumerRecords<String, String> records = consumer.poll(0);
 
         if (!records.isEmpty()) {
-            int count = 0;
             for (ConsumerRecord<String, String> record : records) {
                 String lang = record.topic();
                 String hashtag = record.value();
 
-                // non blocking operation
                 collector.emit(new Values(lang, hashtag));
-
-                // System.out.println("[KAFKA] emitted");
-                count += 1;
-
             }
         }
     }

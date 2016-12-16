@@ -22,7 +22,6 @@ public class HashtagReaderBolt extends BaseRichBolt {
     private Object2IntLinkedOpenHashMap<String> languageKeywordIndex;
     private String[] languageKeyword;
 
-
     public HashtagReaderBolt(String langlist) {
         // TODO Move definition to prepare
         this.languageWindow = new Object2BooleanOpenHashMap<>();
