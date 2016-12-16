@@ -65,9 +65,9 @@ public class KafkaTweetsSpout extends BaseRichSpout {
             for (ConsumerRecord<String, String> record : records) {
                 try {
                     Status status = TwitterObjectFactory.createStatus(record.value());
-
+                    String lang = status.getLang();
                     // non blocking operation
-                    collector.emit(new Values(status));
+                    collector.emit(new Values(lang, status));
 
                     // System.out.println("[KAFKA] emitted");
                     count += 1;
@@ -82,6 +82,6 @@ public class KafkaTweetsSpout extends BaseRichSpout {
     }
 
     public void declareOutputFields(OutputFieldsDeclarer declarer) {
-        declarer.declare(new Fields("tweet"));
+        declarer.declare(new Fields("lang", "tweet"));
     }
 }
