@@ -1,5 +1,6 @@
 package master2016;
 
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import org.apache.storm.task.OutputCollector;
 import org.apache.storm.task.TopologyContext;
 import org.apache.storm.topology.OutputFieldsDeclarer;
@@ -19,7 +20,8 @@ class OutputWriterBolt extends BaseRichBolt {
     private final String outputFolder;
     private OutputCollector collector;
     private String langList;
-    private HashMap<String, PrintWriter> langWriter;
+    private Object2IntOpenHashMap langWriterIndex;
+    private PrintWriter[] langWriter;
 
     public OutputWriterBolt(String langList, String outputFolder) throws IOException {
         this.outputFolder = Paths.get(outputFolder).toString();
@@ -28,10 +30,13 @@ class OutputWriterBolt extends BaseRichBolt {
 
     public void prepare(Map conf, TopologyContext context, OutputCollector collector) {
         this.collector = collector;
-        this.langWriter = new HashMap<>();
+        this.langWriterIndex = new Object2IntOpenHashMap();
 
         String[] langs = this.langList.split(",");
-        for (String langKeyword : langs) {
+
+        this.langWriter = new PrintWriter[langs.length];
+        for (int i = 0; i < langs.length; i++) {
+            String langKeyword = langs[i];
             String lang = langKeyword.split(":")[0];
 
             File outputPath = Paths.get(this.outputFolder, lang + "_" + OutputWriterBolt.GROUP_ID + ".log").toFile();
@@ -44,7 +49,9 @@ class OutputWriterBolt extends BaseRichBolt {
             }
             BufferedWriter bw = new BufferedWriter(fw);
             PrintWriter out = new PrintWriter(bw, true);
-            this.langWriter.put(lang, out);
+
+            this.langWriterIndex.put(lang, i);
+            this.langWriter[i] = out;
         }
     }
 
@@ -82,7 +89,7 @@ class OutputWriterBolt extends BaseRichBolt {
         }
         r = r.substring(0, r.length() - 1);
 
-        this.langWriter.get(lang).println(windowNumber + "," + lang + "," + r);
+        this.langWriter[this.langWriterIndex.getInt(lang)].println(windowNumber + "," + lang + "," + r);
         this.collector.ack(tuple);
     }
 
