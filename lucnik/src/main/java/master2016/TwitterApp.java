@@ -152,7 +152,7 @@ public class TwitterApp {
         if (topic.equals("en") || topic.equals("fr")) {
             count += tweet.getHashtagEntities().length;
             // TODO remove count
-            if (count != 0 && count % 10000 == 0) {
+            if (count % 10000 == 0) {
                 System.out.println(count);
             }
         }

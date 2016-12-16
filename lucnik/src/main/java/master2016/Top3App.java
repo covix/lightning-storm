@@ -37,8 +37,8 @@ public class Top3App {
         String[] languages = langlist.split(",");
         for (String language : languages) {
             String lang = language.split(":")[0];
-            builder.setSpout("kafka-twitter-" + lang, new KafkaTweetsSpout(kafkaBrokerUrls, lang));
-            thrb.fieldsGrouping("kafka-twitter-spout", new Fields("lang"));
+            builder.setSpout("kafka-twitter-" + lang + "-spout", new KafkaTweetsSpout(kafkaBrokerUrls, lang));
+            thrb.fieldsGrouping("kafka-twitter-" + lang + "-spout", new Fields("lang"));
         }
 
         builder.setBolt("twitter-hashtag-counter-bolt", new HashtagCounterBolt(langlist))
@@ -47,11 +47,11 @@ public class Top3App {
         builder.setBolt("output-writer-bolt", new OutputWriterBolt(langlist, outputFolder))
                 .fieldsGrouping("twitter-hashtag-counter-bolt", new Fields("lang"));
 
-        // LocalCluster cluster = new LocalCluster();
-        // cluster.submitTopology(topologyName, config, builder.createTopology());
-        // Thread.sleep(60 * 1000);
-        // cluster.shutdown();
+        LocalCluster cluster = new LocalCluster();
+        cluster.submitTopology(topologyName, config, builder.createTopology());
+        Thread.sleep(60 * 1000);
+        cluster.shutdown();
 
-        StormSubmitter.submitTopology(topologyName, config, builder.createTopology());
+        // StormSubmitter.submitTopology(topologyName, config, builder.createTopology());
     }
 }

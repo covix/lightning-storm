@@ -32,8 +32,8 @@ public class KafkaTweetsSpout extends BaseRichSpout {
         // TODO set static group.id
         properties.put("group.id", ((Long) System.currentTimeMillis()).toString());
         // TODO true or false?
-        properties.put("enable.auto.commit", "true");
-        properties.put("auto.commit.interval.ms", "1000");
+        properties.put("enable.auto.commit", "false");
+        // properties.put("auto.commit.interval.ms", "1000");
         properties.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
         properties.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
 

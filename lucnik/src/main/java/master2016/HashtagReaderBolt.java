@@ -53,8 +53,6 @@ public class HashtagReaderBolt extends BaseRichBolt {
 
         String keyword = this.languageKeyword[this.languageKeywordIndex.getInt(lang)];
 
-        // there's no need to stop the window (a closing keyword is also an opening
-        // languageWindow.put(lang, !languageWindow.get(lang));
         if (!this.languageWindow.getBoolean(lang)) {
             if (keyword.equals(hashtag)) {
                 this.languageWindow.put(lang, true);
