@@ -22,8 +22,7 @@ public class TwitterApp {
         static int TWITTER = 2;
     }
 
-    private static KafkaProducer<String, String> tweetProducer;
-    private static KafkaProducer<String, Status> hashtagProducer;
+    private static KafkaProducer<String, String> prod;
 
     public static void main(String[] args) throws TwitterException, IOException, ExecutionException, InterruptedException {
         int mode;
@@ -75,8 +74,7 @@ public class TwitterApp {
         props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
         props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
 
-        tweetProducer = new KafkaProducer<>(props);
-        hashtagProducer = new KafkaProducer<>(props);
+        prod = new KafkaProducer<>(props);
     }
 
     private static void readFromLogFile(String filename) throws IOException, ExecutionException, InterruptedException, TwitterException {
@@ -154,7 +152,7 @@ public class TwitterApp {
         // TODO check whether all tweets are written to kafka
         // adding .get() at the returned object will make the method synchronous.
         // without it, the application won't wait for it before terminating
-        Future<RecordMetadata> send = tweetProducer.send(new ProducerRecord<>(topic, partition, key, tweet));
+        Future<RecordMetadata> send = prod.send(new ProducerRecord<>(topic, partition, key, tweet));
 
         // TODO this slows thigs down, but should ensure the write of all the tweets
         if (wait) {
@@ -171,15 +169,16 @@ public class TwitterApp {
         int partition = 0;
         String key = null;
 
-        Future<RecordMetadata> send = hashtagProducer.send(new ProducerRecord<>(topic, partition, key, tweet));
+        for (HashtagEntity hashtag : tweet.getHashtagEntities()) {
+            Future<RecordMetadata> send = prod.send(new ProducerRecord<>(topic, partition, key, hashtag.getText()));
 
-        if (wait) {
-            send.get();
+            if (wait) {
+                send.get();
+            }
         }
     }
 
     private static void closeKafkaProductors() {
-        tweetProducer.close();
-        hashtagProducer.close();
+        prod.close();
     }
 }
