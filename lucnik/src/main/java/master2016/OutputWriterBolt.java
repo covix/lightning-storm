@@ -64,6 +64,8 @@ class OutputWriterBolt extends BaseRichBolt {
         // int windowNumber = (int) tuple.getValueByField("windowNumber");
         int windowNumber = this.langWindowCount.getInt(lang);
 
+        System.out.println("RECMAP\t" + counterMap);
+
         String[] hashtags = new String[OutputWriterBolt.N_RESULT];
         int[] counts = new int[OutputWriterBolt.N_RESULT];
 
