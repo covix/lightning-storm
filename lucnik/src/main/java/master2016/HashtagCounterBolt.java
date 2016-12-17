@@ -66,9 +66,10 @@ public class HashtagCounterBolt extends BaseRichBolt {
                     tmpCounterMap.put(hashtagCount.getKey(), (int) hashtagCount.getValue());
                 }
                 closingCounterMap.clear();
+                System.out.println("MAPP: " + tmpCounterMap);
                 this.collector.emit(new Values(lang, tmpCounterMap));
-                System.out.println("COUNTING: " + hashtag + " : " + "KEYWORD");
             }
+            System.out.println("COUNTING: " + hashtag + " : " + "KEYWORD");
         } else {
             // update counter for that language
             Object2IntOpenHashMap<String> counterMap = this.openLangCounterMap.get(lang);
