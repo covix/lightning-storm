@@ -38,8 +38,7 @@ public class HashtagCounterBolt extends BaseRichBolt {
             } else {
                 System.out.println("MAPP: " + this.counterMap);
                 this.collector.emit(new Values(this.counterMap));
-                // TODO clear or new one?
-                this.counterMap.clear();
+                this.counterMap = new Object2IntOpenHashMap<>();
             }
 
             System.out.println("COUNTING: " + hashtag + " : " + "KEYWORD");
