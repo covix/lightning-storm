@@ -40,6 +40,8 @@ public class HashtagCounterBolt extends BaseRichBolt {
                 // TODO clear or new one?
                 this.counterMap.clear();
             }
+
+            System.out.println("COUNTING: " + hashtag + " : " + "KEYWORD");
         } else {
             if (!this.counterMap.containsKey(hashtag)) {
                 this.counterMap.put(hashtag, 1);
