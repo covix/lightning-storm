@@ -11,58 +11,41 @@ import java.io.*;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 
 class OutputWriterBolt extends BaseRichBolt {
     private static final int N_RESULT = 3;
     private static final String GROUP_ID = "03";
     private final String outputFolder;
+    private final String language;
     private OutputCollector collector;
-    private String langList;
-    private Object2IntOpenHashMap langWriterIndex;
-    private Object2IntOpenHashMap langWindowCount;
-    private PrintWriter[] langWriter;
+    private int windowCount;
+    private PrintWriter writer;
 
-    public OutputWriterBolt(String langList, String outputFolder) throws IOException {
+    public OutputWriterBolt(String language, String outputFolder) throws IOException {
+        this.language = language;
         this.outputFolder = Paths.get(outputFolder).toString();
-        this.langList = langList;
     }
 
     public void prepare(Map conf, TopologyContext context, OutputCollector collector) {
         this.collector = collector;
-        this.langWriterIndex = new Object2IntOpenHashMap();
-        this.langWindowCount = new Object2IntOpenHashMap();
+        this.windowCount = 1;
 
-        String[] langs = this.langList.split(",");
-
-        this.langWriter = new PrintWriter[langs.length];
-        for (int i = 0; i < langs.length; i++) {
-            String langKeyword = langs[i];
-            String lang = langKeyword.split(":")[0];
-
-            File outputPath = Paths.get(this.outputFolder, lang + "_" + OutputWriterBolt.GROUP_ID + ".log").toFile();
-
-            FileWriter fw = null;
-            try {
-                fw = new FileWriter(outputPath);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            BufferedWriter bw = new BufferedWriter(fw);
-            PrintWriter out = new PrintWriter(bw, true);
-
-            this.langWriterIndex.put(lang, i);
-            this.langWriter[i] = out;
-            this.langWindowCount.put(lang, 1);
+        File outputPath = Paths.get(this.outputFolder, this.language + "_" + OutputWriterBolt.GROUP_ID + ".log").toFile();
+        FileWriter fw = null;
+        try {
+            fw = new FileWriter(outputPath);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
+        BufferedWriter bw = new BufferedWriter(fw);
+        PrintWriter out = new PrintWriter(bw, true);
+
+        this.writer = out;
     }
 
     public void execute(Tuple tuple) {
-        String lang = tuple.getStringByField("lang");
         Object2IntOpenHashMap<String> counterMap = (Object2IntOpenHashMap<String>) tuple.getValueByField("map");
-        // int windowNumber = (int) tuple.getValueByField("windowNumber");
-        int windowNumber = this.langWindowCount.getInt(lang);
 
         String[] hashtags = new String[OutputWriterBolt.N_RESULT];
         int[] counts = new int[OutputWriterBolt.N_RESULT];
@@ -93,8 +76,8 @@ class OutputWriterBolt extends BaseRichBolt {
         }
         r = r.substring(0, r.length() - 1);
 
-        this.langWriter[this.langWriterIndex.getInt(lang)].println(windowNumber + "," + lang + "," + r);
-        this.langWindowCount.put(lang, windowNumber + 1);
+        this.writer.println(this.windowCount + "," + this.language + "," + r);
+        this.windowCount += 1;
         this.collector.ack(tuple);
     }
 

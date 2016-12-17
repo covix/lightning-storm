@@ -11,10 +11,11 @@ import org.apache.storm.topology.base.BaseRichSpout;
 import org.apache.storm.tuple.Fields;
 import org.apache.storm.tuple.Values;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Properties;
 
 public class KafkaTweetsSpout extends BaseRichSpout {
-
     private SpoutOutputCollector collector;
     private KafkaConsumer<String, String> consumer;
     private String kafkaBrokerUrls;
@@ -52,16 +53,13 @@ public class KafkaTweetsSpout extends BaseRichSpout {
 
         if (!records.isEmpty()) {
             for (ConsumerRecord<String, String> record : records) {
-
-                String lang = record.topic();
                 String hashtag = record.value();
-
-                collector.emit(new Values(lang, hashtag));
+                collector.emit(new Values(hashtag));
             }
         }
     }
 
     public void declareOutputFields(OutputFieldsDeclarer declarer) {
-        declarer.declare(new Fields("lang", "hashtag"));
+        declarer.declare(new Fields( "hashtag"));
     }
 }

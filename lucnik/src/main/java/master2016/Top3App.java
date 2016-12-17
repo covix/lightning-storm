@@ -29,24 +29,28 @@ public class Top3App {
         }
 
         Config config = new Config();
-        config.setDebug(true);
+        // config.setDebug(true);
+        // config.put("topology.max.spout.pending", Integer.valueOf(1));
         TopologyBuilder builder = new TopologyBuilder();
-
-
-        BoltDeclarer thrb = builder.setBolt("twitter-hashtag-reader-bolt", new HashtagReaderBolt(langlist), 3);
 
         String[] languages = langlist.split(",");
         for (String language : languages) {
-            String lang = language.split(":")[0];
-            builder.setSpout("kafka-twitter-" + lang + "-spout", new KafkaTweetsSpout(kafkaBrokerUrls, lang));
-            thrb.fieldsGrouping("kafka-twitter-" + lang + "-spout", new Fields("lang"));
+            String[] langKeyword = language.split(":");
+            String lang = langKeyword[0];
+            String keyword = langKeyword[1];
+
+            builder.setSpout(lang + "-kafka-twitter-spout", new KafkaTweetsSpout(kafkaBrokerUrls, lang));
+
+            builder.setBolt(lang + "-twitter-hashtag-reader-bolt", new HashtagReaderBolt(keyword))
+                    .shuffleGrouping(lang + "-kafka-twitter-spout");
+
+            builder.setBolt(lang + "-twitter-hashtag-counter-bolt", new HashtagCounterBolt(keyword))
+                    .shuffleGrouping(lang + "-twitter-hashtag-reader-bolt");
+
+            builder.setBolt(lang + "-output-writer-bolt", new OutputWriterBolt(lang, outputFolder))
+                    .shuffleGrouping(lang + "-twitter-hashtag-counter-bolt");
         }
 
-        builder.setBolt("twitter-hashtag-counter-bolt", new HashtagCounterBolt(langlist))
-                .fieldsGrouping("twitter-hashtag-reader-bolt", new Fields("lang"));
-
-        builder.setBolt("output-writer-bolt", new OutputWriterBolt(langlist, outputFolder))
-                .fieldsGrouping("twitter-hashtag-counter-bolt", new Fields("lang"));
 
         // LocalCluster cluster = new LocalCluster();
         // cluster.submitTopology(topologyName, config, builder.createTopology());
