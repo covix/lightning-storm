@@ -67,6 +67,7 @@ public class HashtagCounterBolt extends BaseRichBolt {
                 }
                 closingCounterMap.clear();
                 this.collector.emit(new Values(lang, tmpCounterMap));
+                System.out.println("COUNTING: " + hashtag + " : " + "KEYWORD");
             }
         } else {
             // update counter for that language
