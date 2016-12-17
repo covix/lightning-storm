@@ -24,7 +24,6 @@ public class TwitterApp {
 
     private static KafkaProducer<String, String> prod;
     private static Future<RecordMetadata> _send;
-    private static int count = 0;
 
     public static void main(String[] args) throws TwitterException, IOException, ExecutionException, InterruptedException {
         int mode;
@@ -149,17 +148,8 @@ public class TwitterApp {
         int partition = 0;
         String key = null;
 
-        if (topic.equals("en") || topic.equals("fr")) {
-            count += tweet.getHashtagEntities().length;
-            // TODO remove count
-            if (count % 10000 == 0) {
-                System.out.println(count);
-            }
-        }
-
         for (HashtagEntity hashtag : tweet.getHashtagEntities()) {
             // TODO remove check of languages
-
             Future<RecordMetadata> send = prod.send(new ProducerRecord<>(topic, partition, key, hashtag.getText()));
 
             if (wait) {
