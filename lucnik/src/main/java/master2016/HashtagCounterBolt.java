@@ -46,6 +46,8 @@ public class HashtagCounterBolt extends BaseRichBolt {
             } else {
                 this.counterMap.put(hashtag, this.counterMap.getInt(hashtag) + 1);
             }
+
+            System.out.println("COUNTING: " + hashtag + " : " + this.counterMap.getInt(hashtag));
         }
         this.collector.ack(tuple);
     }
