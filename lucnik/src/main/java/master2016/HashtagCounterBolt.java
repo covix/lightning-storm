@@ -36,6 +36,7 @@ public class HashtagCounterBolt extends BaseRichBolt {
             if (!this.windowOpen) {  // if the window was closed
                 this.windowOpen = true;
             } else {
+                System.out.println("MAPP: " + this.counterMap);
                 this.collector.emit(new Values(this.counterMap));
                 // TODO clear or new one?
                 this.counterMap.clear();
