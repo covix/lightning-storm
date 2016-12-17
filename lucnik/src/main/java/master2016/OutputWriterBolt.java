@@ -21,6 +21,7 @@ class OutputWriterBolt extends BaseRichBolt {
     private OutputCollector collector;
     private String langList;
     private Object2IntOpenHashMap langWriterIndex;
+    private Object2IntOpenHashMap langWindowCount;
     private PrintWriter[] langWriter;
 
     public OutputWriterBolt(String langList, String outputFolder) throws IOException {
@@ -31,6 +32,7 @@ class OutputWriterBolt extends BaseRichBolt {
     public void prepare(Map conf, TopologyContext context, OutputCollector collector) {
         this.collector = collector;
         this.langWriterIndex = new Object2IntOpenHashMap();
+        this.langWindowCount = new Object2IntOpenHashMap();
 
         String[] langs = this.langList.split(",");
 
@@ -52,13 +54,15 @@ class OutputWriterBolt extends BaseRichBolt {
 
             this.langWriterIndex.put(lang, i);
             this.langWriter[i] = out;
+            this.langWindowCount.put(lang, 1);
         }
     }
 
     public void execute(Tuple tuple) {
         String lang = tuple.getStringByField("lang");
-        HashMap<String, Integer> counterMap = (HashMap<String, Integer>) tuple.getValueByField("map");
-        int windowNumber = (int) tuple.getValueByField("windowNumber");
+        Object2IntOpenHashMap<String> counterMap = (Object2IntOpenHashMap<String>) tuple.getValueByField("map");
+        // int windowNumber = (int) tuple.getValueByField("windowNumber");
+        int windowNumber = this.langWindowCount.getInt(lang);
 
         String[] hashtags = new String[OutputWriterBolt.N_RESULT];
         int[] counts = new int[OutputWriterBolt.N_RESULT];
@@ -90,6 +94,7 @@ class OutputWriterBolt extends BaseRichBolt {
         r = r.substring(0, r.length() - 1);
 
         this.langWriter[this.langWriterIndex.getInt(lang)].println(windowNumber + "," + lang + "," + r);
+        this.langWindowCount.put(lang, windowNumber + 1);
         this.collector.ack(tuple);
     }
 

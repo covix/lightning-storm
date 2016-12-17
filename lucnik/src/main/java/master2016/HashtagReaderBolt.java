@@ -60,6 +60,7 @@ public class HashtagReaderBolt extends BaseRichBolt {
         } else {
             this.collector.emit(new Values(lang, hashtag));
         }
+        this.collector.ack(tuple);
     }
 
     public void declareOutputFields(OutputFieldsDeclarer declarer) {

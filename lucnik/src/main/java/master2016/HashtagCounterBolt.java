@@ -18,7 +18,6 @@ public class HashtagCounterBolt extends BaseRichBolt {
     private HashMap<String, Object2IntOpenHashMap<String>> openLangCounterMap;
 
     private Object2BooleanOpenHashMap<String> languageWindow;
-    private Object2IntOpenHashMap<String> langWindowNumber;
     private Object2IntOpenHashMap<String> languageKeywordIndex;
     private String[] languageKeyword;
 
@@ -26,7 +25,6 @@ public class HashtagCounterBolt extends BaseRichBolt {
 
     public HashtagCounterBolt(String langList) {
         this.languageWindow = new Object2BooleanOpenHashMap<>();
-        this.langWindowNumber = new Object2IntOpenHashMap<>();
         this.languageKeywordIndex = new Object2IntOpenHashMap<>();
         this.openLangCounterMap = new HashMap<>();
 
@@ -42,7 +40,6 @@ public class HashtagCounterBolt extends BaseRichBolt {
             this.languageWindow.put(lang, false);
             this.languageKeywordIndex.put(lang, i);
             this.languageKeyword[i] = keyword;
-            this.langWindowNumber.put(lang, 0);
             this.openLangCounterMap.put(lang, new Object2IntOpenHashMap<String>());
         }
     }
@@ -60,16 +57,14 @@ public class HashtagCounterBolt extends BaseRichBolt {
             if (!this.languageWindow.getBoolean(lang)) {  // if the window was previously closed
                 this.languageWindow.put(lang, true);
             } else {
-                this.langWindowNumber.put(lang, this.langWindowNumber.get(lang) + 1);
-                // close and save current window in the old one
                 Object2IntOpenHashMap<String> closingCounterMap = this.openLangCounterMap.get(lang);
 
-                HashMap<String, Integer> tmpCounterMap = new HashMap<>();
+                Object2IntOpenHashMap<String> tmpCounterMap = new Object2IntOpenHashMap<>();
                 for (Map.Entry<String, Integer> hashtagCount : closingCounterMap.entrySet()) {
-                    tmpCounterMap.put(hashtagCount.getKey(), hashtagCount.getValue());
+                    tmpCounterMap.put(hashtagCount.getKey(), (int) hashtagCount.getValue());
                 }
                 closingCounterMap.clear();
-                this.collector.emit(new Values(lang, tmpCounterMap, this.langWindowNumber.get(lang)));
+                this.collector.emit(new Values(lang, tmpCounterMap));
             }
         } else {
             // update counter for that language
@@ -77,7 +72,7 @@ public class HashtagCounterBolt extends BaseRichBolt {
             if (!counterMap.containsKey(hashtag)) {
                 counterMap.put(hashtag, 1);
             } else {
-                Integer c = counterMap.getInt(hashtag) + 1;
+                int c = counterMap.getInt(hashtag) + 1;
                 counterMap.put(hashtag, c);
             }
         }
@@ -85,6 +80,6 @@ public class HashtagCounterBolt extends BaseRichBolt {
     }
 
     public void declareOutputFields(OutputFieldsDeclarer declarer) {
-        declarer.declare(new Fields("lang", "map", "windowNumber"));
+        declarer.declare(new Fields("lang", "map"));
     }
 }

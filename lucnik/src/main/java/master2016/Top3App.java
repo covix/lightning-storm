@@ -32,7 +32,7 @@ public class Top3App {
         config.setDebug(true);
         TopologyBuilder builder = new TopologyBuilder();
 
-        BoltDeclarer thrb = builder.setBolt("twitter-hashtag-reader-bolt", new HashtagReaderBolt(langlist));
+        BoltDeclarer thrb = builder.setBolt("twitter-hashtag-reader-bolt", new HashtagReaderBolt(langlist), 3);
 
         String[] languages = langlist.split(",");
         for (String language : languages) {
@@ -47,11 +47,11 @@ public class Top3App {
         builder.setBolt("output-writer-bolt", new OutputWriterBolt(langlist, outputFolder))
                 .fieldsGrouping("twitter-hashtag-counter-bolt", new Fields("lang"));
 
-        LocalCluster cluster = new LocalCluster();
-        cluster.submitTopology(topologyName, config, builder.createTopology());
-        Thread.sleep(60 * 1000);
-        cluster.shutdown();
+        // LocalCluster cluster = new LocalCluster();
+        // cluster.submitTopology(topologyName, config, builder.createTopology());
+        // Thread.sleep(60 * 1000);
+        // cluster.shutdown();
 
-        // StormSubmitter.submitTopology(topologyName, config, builder.createTopology());
+        StormSubmitter.submitTopology(topologyName, config, builder.createTopology());
     }
 }
