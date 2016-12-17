@@ -30,7 +30,6 @@ public class Top3App {
 
         Config config = new Config();
         // TODO remove
-        config.setDebug(true);
         TopologyBuilder builder = new TopologyBuilder();
 
         BoltDeclarer thrb = builder.setBolt("twitter-hashtag-reader-bolt", new HashtagReaderBolt(langlist), 3);
