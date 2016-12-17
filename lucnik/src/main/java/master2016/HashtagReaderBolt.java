@@ -28,6 +28,7 @@ public class HashtagReaderBolt extends BaseRichBolt {
     public void execute(Tuple tuple) {
         String hashtag = tuple.getStringByField("hashtag");
 
+        System.out.println("READERR: " + hashtag);
         // if (!this.windowOpen) {
         //     if (this.keyword.equals(hashtag)) {
         //         this.windowOpen = true;

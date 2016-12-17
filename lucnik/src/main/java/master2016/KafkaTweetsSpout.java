@@ -55,12 +55,12 @@ public class KafkaTweetsSpout extends BaseRichSpout {
             for (ConsumerRecord<String, String> record : records) {
                 String hashtag = record.value();
                 collector.emit(new Values(hashtag));
-                System.out.println("HASHTAGG "+ hashtag);
+                System.out.println("KAFKAA " + hashtag);
             }
         }
     }
 
     public void declareOutputFields(OutputFieldsDeclarer declarer) {
-        declarer.declare(new Fields( "hashtag"));
+        declarer.declare(new Fields("hashtag"));
     }
 }

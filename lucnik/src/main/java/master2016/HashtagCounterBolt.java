@@ -30,6 +30,7 @@ public class HashtagCounterBolt extends BaseRichBolt {
 
     public void execute(Tuple tuple) {
         String hashtag = tuple.getStringByField("hashtag");
+        System.out.println("COUNTERR: " + hashtag);
 
         if (this.keyword.equals(hashtag)) {
             if (!this.windowOpen) {  // if the window was closed
