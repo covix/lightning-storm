@@ -31,19 +31,11 @@ public class HashtagReaderBolt extends BaseRichBolt {
             if (this.keyword.equals(hashtag)) {
                 this.windowOpen = true;
                 this.collector.emit(new Values(hashtag));
+
             }
         } else {
             this.collector.emit(new Values(hashtag));
         }
-
-        // if (this.keyword.equals(hashtag)) {
-        //     this.windowOpen = true;
-        // }
-        //
-        // if (windowOpen) {
-        //     this.collector.emit(new Values(hashtag));
-        // }
-
         this.collector.ack(tuple);
     }
 

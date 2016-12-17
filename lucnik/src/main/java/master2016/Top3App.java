@@ -29,7 +29,6 @@ public class Top3App {
         }
 
         Config config = new Config();
-        config.setDebug(true);
         // config.put("topology.max.spout.pending", Integer.valueOf(1));
         TopologyBuilder builder = new TopologyBuilder();
 
@@ -50,7 +49,6 @@ public class Top3App {
             builder.setBolt(lang + "-output-writer-bolt", new OutputWriterBolt(lang, outputFolder))
                     .shuffleGrouping(lang + "-twitter-hashtag-counter-bolt");
         }
-
 
         // LocalCluster cluster = new LocalCluster();
         // cluster.submitTopology(topologyName, config, builder.createTopology());
