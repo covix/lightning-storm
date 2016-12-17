@@ -52,6 +52,7 @@ public class KafkaTweetsSpout extends BaseRichSpout {
 
         if (!records.isEmpty()) {
             for (ConsumerRecord<String, String> record : records) {
+
                 String lang = record.topic();
                 String hashtag = record.value();
 

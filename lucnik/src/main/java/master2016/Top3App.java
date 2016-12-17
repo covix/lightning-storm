@@ -32,6 +32,7 @@ public class Top3App {
         config.setDebug(true);
         TopologyBuilder builder = new TopologyBuilder();
 
+
         BoltDeclarer thrb = builder.setBolt("twitter-hashtag-reader-bolt", new HashtagReaderBolt(langlist), 3);
 
         String[] languages = langlist.split(",");
