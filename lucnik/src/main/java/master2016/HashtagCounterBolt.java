@@ -31,8 +31,8 @@ public class HashtagCounterBolt extends BaseRichBolt {
     public void execute(Tuple tuple) {
         String hashtag = tuple.getStringByField("hashtag");
 
-        if (keyword.equals(hashtag)) {
-            if (!this.windowOpen) {  // if the window was previously closed
+        if (this.keyword.equals(hashtag)) {
+            if (!this.windowOpen) {  // if the window was closed
                 this.windowOpen = true;
             } else {
                 this.collector.emit(new Values(this.counterMap));
@@ -43,8 +43,7 @@ public class HashtagCounterBolt extends BaseRichBolt {
             if (!this.counterMap.containsKey(hashtag)) {
                 this.counterMap.put(hashtag, 1);
             } else {
-                int c = this.counterMap.getInt(hashtag) + 1;
-                this.counterMap.put(hashtag, c);
+                this.counterMap.put(hashtag, this.counterMap.getInt(hashtag) + 1);
             }
         }
         this.collector.ack(tuple);

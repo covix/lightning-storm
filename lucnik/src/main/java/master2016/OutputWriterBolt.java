@@ -50,7 +50,13 @@ class OutputWriterBolt extends BaseRichBolt {
         String[] hashtags = new String[OutputWriterBolt.N_RESULT];
         int[] counts = new int[OutputWriterBolt.N_RESULT];
 
+        System.out.println("[DEBUGG]");
+        System.out.println("Keys: " + counterMap.keySet());
+        System.out.println("counterMap == null?: " + counterMap == null);
+        System.out.println("counterMap.keySet() == null?: " + counterMap.keySet() == null);
+
         ArrayList<String> hashtagsIter = new ArrayList<>(counterMap.keySet());
+        System.out.println("hashtagsIter == null? " + hashtagsIter == null);
         Collections.sort(hashtagsIter);
 
         // instead of ordering O(nlogn) simply look for the 3 most present hashtags each time
@@ -59,7 +65,7 @@ class OutputWriterBolt extends BaseRichBolt {
             int count = 0;
 
             for (String hashtagIter : hashtagsIter) {
-                int hashtagCount = counterMap.get(hashtagIter);
+                int hashtagCount = counterMap.getInt(hashtagIter);
                 if (hashtagCount > count) {
                     hashtag = hashtagIter;
                     count = hashtagCount;

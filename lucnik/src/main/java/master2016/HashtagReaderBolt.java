@@ -12,7 +12,7 @@ import java.util.Map;
 
 
 public class HashtagReaderBolt extends BaseRichBolt {
-    private final String keyword;
+    private String keyword;
     private OutputCollector collector;
     private boolean windowOpen;
 
@@ -28,14 +28,23 @@ public class HashtagReaderBolt extends BaseRichBolt {
     public void execute(Tuple tuple) {
         String hashtag = tuple.getStringByField("hashtag");
 
-        if (!this.windowOpen) {
-            if (this.keyword.equals(hashtag)) {
-                this.windowOpen = true;
-                this.collector.emit(new Values(hashtag));
-            }
-        } else {
+        // if (!this.windowOpen) {
+        //     if (this.keyword.equals(hashtag)) {
+        //         this.windowOpen = true;
+        //         this.collector.emit(new Values(hashtag));
+        //     }
+        // } else {
+        //     this.collector.emit(new Values(hashtag));
+        // }
+
+        if (this.keyword.equals(hashtag)) {
+            this.windowOpen = true;
+        }
+
+        if (windowOpen) {
             this.collector.emit(new Values(hashtag));
         }
+
         this.collector.ack(tuple);
     }
 
