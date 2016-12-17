@@ -50,6 +50,8 @@ public class HashtagReaderBolt extends BaseRichBolt {
         String lang = tuple.getStringByField("lang");
         String hashtag = tuple.getStringByField("hashtag");
 
+        System.out.println("READERR: "+ hashtag);
+
         String keyword = this.languageKeyword[this.languageKeywordIndex.getInt(lang)];
 
         if (!this.languageWindow.getBoolean(lang)) {

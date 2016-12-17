@@ -57,6 +57,7 @@ public class KafkaTweetsSpout extends BaseRichSpout {
                 String hashtag = record.value();
 
                 collector.emit(new Values(lang, hashtag));
+                System.out.println("KAFKAA: "+ hashtag);
             }
         }
     }

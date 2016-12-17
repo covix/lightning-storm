@@ -53,6 +53,8 @@ public class HashtagCounterBolt extends BaseRichBolt {
         String keyword = this.languageKeyword[this.languageKeywordIndex.getInt(lang)];
         String hashtag = tuple.getStringByField("hashtag");
 
+        System.out.println("COUNTERR: "+ hashtag);
+
         if (keyword.equals(hashtag)) {
             if (!this.languageWindow.getBoolean(lang)) {  // if the window was previously closed
                 this.languageWindow.put(lang, true);
