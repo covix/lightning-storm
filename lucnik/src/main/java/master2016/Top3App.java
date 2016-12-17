@@ -3,6 +3,7 @@ package master2016;
 import org.apache.storm.Config;
 import org.apache.storm.LocalCluster;
 import org.apache.storm.StormSubmitter;
+import org.apache.storm.topology.BoltDeclarer;
 import org.apache.storm.topology.TopologyBuilder;
 import org.apache.storm.tuple.Fields;
 
@@ -27,19 +28,22 @@ public class Top3App {
             outputFolder = args[3];
         }
 
-
         Config config = new Config();
         config.setDebug(true);
-
         TopologyBuilder builder = new TopologyBuilder();
-        builder.setSpout("kafka-twitter-spout", new KafkaTweetsSpout(kafkaBrokerUrls));
 
-        builder.setBolt("twitter-hashtag-reader-bolt", new HashtagReaderBolt(langlist), 3)
-                .fieldsGrouping("kafka-twitter-spout", new Fields("lang"));
+
+        BoltDeclarer thrb = builder.setBolt("twitter-hashtag-reader-bolt", new HashtagReaderBolt(langlist), 3);
+
+        String[] languages = langlist.split(",");
+        for (String language : languages) {
+            String lang = language.split(":")[0];
+            builder.setSpout("kafka-twitter-" + lang + "-spout", new KafkaTweetsSpout(kafkaBrokerUrls, lang));
+            thrb.fieldsGrouping("kafka-twitter-" + lang + "-spout", new Fields("lang"));
+        }
 
         builder.setBolt("twitter-hashtag-counter-bolt", new HashtagCounterBolt(langlist))
                 .fieldsGrouping("twitter-hashtag-reader-bolt", new Fields("lang"));
-
 
         builder.setBolt("output-writer-bolt", new OutputWriterBolt(langlist, outputFolder))
                 .fieldsGrouping("twitter-hashtag-counter-bolt", new Fields("lang"));

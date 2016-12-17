@@ -23,6 +23,8 @@ public class TwitterApp {
     }
 
     private static KafkaProducer<String, String> prod;
+    private static Future<RecordMetadata> _send;
+    private static int count = 0;
 
     public static void main(String[] args) throws TwitterException, IOException, ExecutionException, InterruptedException {
         int mode;
@@ -77,15 +79,17 @@ public class TwitterApp {
         prod = new KafkaProducer<>(props);
     }
 
-    private static void readFromLogFile(String filename) throws IOException, ExecutionException, InterruptedException {
-        for (int i = 0; i < 10; i++) {
-            BufferedReader tfbr = new BufferedReader(new FileReader(filename));
-            String line;
-            while ((line = tfbr.readLine()) != null) {
-                writeTweetToKafka(line, true);
-            }
+    private static void readFromLogFile(String filename) throws IOException, ExecutionException, InterruptedException, TwitterException {
+        BufferedReader tfbr = new BufferedReader(new FileReader(filename));
+        String line;
+        while ((line = tfbr.readLine()) != null) {
+            // writeTweetToKafka(line, true);
+            Status status = TwitterObjectFactory.createStatus(line);
+            writeHashtagsToKafka(status, true);
         }
-        closeKafkaProductor();
+        _send.get();
+        Thread.sleep(10 * 1000);
+        closeKafkaProductors();
     }
 
     private static void readFromTwitter(String consumerKey, String consumerSecret, String accessToken, String accessTokenSecret) {
@@ -99,7 +103,8 @@ public class TwitterApp {
                 // System.out.println(status.getLang() + ": " + "@" + status.getUser().getScreenName() + " - " + status.getText());
                 String jsonStatus = TwitterObjectFactory.getRawJSON(status);
                 try {
-                    writeTweetToKafka(jsonStatus);
+                    // writeTweetToKafka(jsonStatus);
+                    writeHashtagsToKafka(status);
                 } catch (ExecutionException | InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -110,7 +115,7 @@ public class TwitterApp {
             }
 
             public void onTrackLimitationNotice(int numberOfLimitedStatuses) {
-                System.out.println("Got track limitation notice:" + numberOfLimitedStatuses);
+                // System.out.println("Got track limitation notice:" + numberOfLimitedStatuses);
             }
 
             public void onScrubGeo(long userId, long upToStatusId) {
@@ -135,29 +140,36 @@ public class TwitterApp {
         twitterStream.sample();
     }
 
-    private static void writeTweetToKafka(String tweet) throws ExecutionException, InterruptedException {
-        writeTweetToKafka(tweet, false);
+    private static void writeHashtagsToKafka(Status tweet) throws ExecutionException, InterruptedException {
+        writeHashtagsToKafka(tweet, false);
     }
 
-    private static void writeTweetToKafka(String tweet, boolean wait) throws ExecutionException, InterruptedException {
-        String topic = "twitter";
+    private static void writeHashtagsToKafka(Status tweet, boolean wait) throws ExecutionException, InterruptedException {
+        String topic = tweet.getLang();
         int partition = 0;
-        // From the Docs:
-        // The key is an optional message key that was used for partition assignment. The key can be null.
-        String key = "testKey";
+        String key = null;
 
-        // TODO check whether all tweets are written to kafka
-        // adding .get() at the returned object will make the method synchronous.
-        // without it, the application won't wait for it before terminating
-        Future<RecordMetadata> send = prod.send(new ProducerRecord<>(topic, partition, key, tweet));
+        if (topic.equals("en") || topic.equals("fr")) {
+            count += tweet.getHashtagEntities().length;
+            // TODO remove count
+            if (count % 10000 == 0) {
+                System.out.println(count);
+            }
+        }
 
-        // TODO this slows thigs down, but should ensure the write of all the tweets
-        if (wait) {
-            send.get();
+        for (HashtagEntity hashtag : tweet.getHashtagEntities()) {
+            // TODO remove check of languages
+
+            Future<RecordMetadata> send = prod.send(new ProducerRecord<>(topic, partition, key, hashtag.getText()));
+
+            if (wait) {
+                _send = send;
+            }
         }
     }
 
-    private static void closeKafkaProductor() {
+
+    private static void closeKafkaProductors() {
         prod.close();
     }
 }

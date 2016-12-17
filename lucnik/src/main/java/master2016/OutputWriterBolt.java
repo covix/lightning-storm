@@ -1,5 +1,6 @@
 package master2016;
 
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import org.apache.storm.task.OutputCollector;
 import org.apache.storm.task.TopologyContext;
 import org.apache.storm.topology.OutputFieldsDeclarer;
@@ -19,7 +20,9 @@ class OutputWriterBolt extends BaseRichBolt {
     private final String outputFolder;
     private OutputCollector collector;
     private String langList;
-    private HashMap<String, PrintWriter> langWriter;
+    private Object2IntOpenHashMap langWriterIndex;
+    private Object2IntOpenHashMap langWindowCount;
+    private PrintWriter[] langWriter;
 
     public OutputWriterBolt(String langList, String outputFolder) throws IOException {
         this.outputFolder = Paths.get(outputFolder).toString();
@@ -28,10 +31,14 @@ class OutputWriterBolt extends BaseRichBolt {
 
     public void prepare(Map conf, TopologyContext context, OutputCollector collector) {
         this.collector = collector;
-        this.langWriter = new HashMap<>();
+        this.langWriterIndex = new Object2IntOpenHashMap();
+        this.langWindowCount = new Object2IntOpenHashMap();
 
         String[] langs = this.langList.split(",");
-        for (String langKeyword : langs) {
+
+        this.langWriter = new PrintWriter[langs.length];
+        for (int i = 0; i < langs.length; i++) {
+            String langKeyword = langs[i];
             String lang = langKeyword.split(":")[0];
 
             File outputPath = Paths.get(this.outputFolder, lang + "_" + OutputWriterBolt.GROUP_ID + ".log").toFile();
@@ -40,28 +47,28 @@ class OutputWriterBolt extends BaseRichBolt {
             try {
                 fw = new FileWriter(outputPath);
             } catch (IOException e) {
-                System.out.println("ERRLANG " + lang);
                 e.printStackTrace();
             }
             BufferedWriter bw = new BufferedWriter(fw);
             PrintWriter out = new PrintWriter(bw, true);
-            this.langWriter.put(lang, out);
+
+            this.langWriterIndex.put(lang, i);
+            this.langWriter[i] = out;
+            this.langWindowCount.put(lang, 1);
         }
     }
 
     public void execute(Tuple tuple) {
-        System.out.println("SAVEIT");
-
         String lang = tuple.getStringByField("lang");
-        HashMap<String, Integer> counterMap = (HashMap<String, Integer>) tuple.getValueByField("map");
-        int windowNumber = (int) tuple.getValueByField("windowNumber");
+        Object2IntOpenHashMap<String> counterMap = (Object2IntOpenHashMap<String>) tuple.getValueByField("map");
+        // int windowNumber = (int) tuple.getValueByField("windowNumber");
+        int windowNumber = this.langWindowCount.getInt(lang);
 
         String[] hashtags = new String[OutputWriterBolt.N_RESULT];
         int[] counts = new int[OutputWriterBolt.N_RESULT];
 
         ArrayList<String> hashtagsIter = new ArrayList<>(counterMap.keySet());
         Collections.sort(hashtagsIter);
-        System.out.println("SORTED\t" + hashtagsIter);
 
         // instead of ordering O(nlogn) simply look for the 3 most present hashtags each time
         for (int i = 0; i < OutputWriterBolt.N_RESULT; i++) {
@@ -86,9 +93,8 @@ class OutputWriterBolt extends BaseRichBolt {
         }
         r = r.substring(0, r.length() - 1);
 
-        System.out.println(windowNumber + "," + lang + "," + r);
-        this.langWriter.get(lang).println(windowNumber + "," + lang + "," + r);
-        System.out.println("ACKED");
+        this.langWriter[this.langWriterIndex.getInt(lang)].println(windowNumber + "," + lang + "," + r);
+        this.langWindowCount.put(lang, windowNumber + 1);
         this.collector.ack(tuple);
     }
 
