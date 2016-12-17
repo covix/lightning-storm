@@ -47,6 +47,8 @@ class OutputWriterBolt extends BaseRichBolt {
     public void execute(Tuple tuple) {
         Object2IntOpenHashMap<String> counterMap = (Object2IntOpenHashMap<String>) tuple.getValueByField("map");
 
+        System.out.println("RECMAP\t" + counterMap);
+
         String[] hashtags = new String[OutputWriterBolt.N_RESULT];
         int[] counts = new int[OutputWriterBolt.N_RESULT];
 
