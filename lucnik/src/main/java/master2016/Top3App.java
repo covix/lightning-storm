@@ -15,19 +15,16 @@ public class Top3App {
         // config.put("topology.max.spout.pending", Integer.valueOf(1));
         TopologyBuilder builder = new TopologyBuilder();
 
-        String[] languages = langlist.split(",");
-        for (String language : languages) {
-            String[] langKeyword = language.split(":");
-            String lang = langKeyword[0];
-            String keyword = langKeyword[1];
+        String[] langKeywords = langlist.split(",");
+        for (String langKeyword : langKeywords) {
+            String[] langKeywordSplitted = langKeyword.split(":");
+            String lang = langKeywordSplitted[0];
+            String keyword = langKeywordSplitted[1];
 
             builder.setSpout(lang + "-kafka-twitter-spout", new KafkaTweetsSpout(kafkaBrokerUrls, lang));
 
-            builder.setBolt(lang + "-twitter-hashtag-reader-bolt", new HashtagReaderBolt(keyword))
+            builder.setBolt(lang + "-twitter-hashtag-reader-bolt", new HashtagReaderBolt(keyword, lang, outputFolder))
                     .shuffleGrouping(lang + "-kafka-twitter-spout");
-
-            builder.setBolt(lang + "-output-writer-bolt", new OutputWriterBolt(lang, outputFolder))
-                    .shuffleGrouping(lang + "-twitter-hashtag-reader-bolt");
         }
 
         // LocalCluster cluster = new LocalCluster();
