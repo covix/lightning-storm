@@ -47,20 +47,12 @@ class OutputWriterBolt extends BaseRichBolt {
     public void execute(Tuple tuple) {
         Object2IntOpenHashMap<String> counterMap = (Object2IntOpenHashMap<String>) tuple.getValueByField("map");
 
-        System.out.println("RECMAP\t" + counterMap);
 
         String[] hashtags = new String[OutputWriterBolt.N_RESULT];
         int[] counts = new int[OutputWriterBolt.N_RESULT];
 
-        System.out.print("[DEBUGG]\t");
-        System.out.print("Keys: " + counterMap.keySet() + "\t");
-        // System.out.print("counterMap equal null?: " + counterMap == null + "\t");
-        // System.out.print("counterMap.keySet() == null?: " + counterMap.keySet() == null + "\t");
-
         ArrayList<String> hashtagsIter = new ArrayList<>(counterMap.keySet());
-        System.out.print("Array: " + hashtagsIter + "\t");
         Collections.sort(hashtagsIter);
-        System.out.println("Sorted Keys " + hashtagsIter+ "\t");
 
         // instead of ordering O(nlogn) simply look for the 3 most present hashtags each time
         for (int i = 0; i < OutputWriterBolt.N_RESULT; i++) {
