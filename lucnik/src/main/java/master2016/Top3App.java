@@ -12,7 +12,8 @@ public class Top3App {
         String outputFolder = args[3];
 
         Config config = new Config();
-        // config.put("topology.max.spout.pending", Integer.valueOf(1));
+        config.put("topology.max.spout.pending", 1);
+
         TopologyBuilder builder = new TopologyBuilder();
 
         String[] langKeywords = langlist.split(",");
@@ -26,11 +27,6 @@ public class Top3App {
             builder.setBolt(lang + "-twitter-hashtag-reader-bolt", new HashtagReaderBolt(keyword, lang, outputFolder))
                     .shuffleGrouping(lang + "-kafka-twitter-spout");
         }
-
-        // LocalCluster cluster = new LocalCluster();
-        // cluster.submitTopology(topologyName, config, builder.createTopology());
-        // Thread.sleep(60 * 1000);
-        // cluster.shutdown();
 
         StormSubmitter.submitTopology(topologyName, config, builder.createTopology());
     }
