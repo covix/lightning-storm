@@ -43,11 +43,8 @@ public class Top3App {
             builder.setBolt(lang + "-twitter-hashtag-reader-bolt", new HashtagReaderBolt(keyword))
                     .shuffleGrouping(lang + "-kafka-twitter-spout");
 
-            builder.setBolt(lang + "-twitter-hashtag-counter-bolt", new HashtagCounterBolt(keyword))
-                    .shuffleGrouping(lang + "-twitter-hashtag-reader-bolt");
-
             builder.setBolt(lang + "-output-writer-bolt", new OutputWriterBolt(lang, outputFolder))
-                    .shuffleGrouping(lang + "-twitter-hashtag-counter-bolt");
+                    .shuffleGrouping(lang + "-twitter-hashtag-reader-bolt");
         }
 
         // LocalCluster cluster = new LocalCluster();
