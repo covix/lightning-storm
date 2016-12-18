@@ -50,9 +50,6 @@ class OutputWriterBolt extends BaseRichBolt {
         String[] hashtags = new String[OutputWriterBolt.N_RESULT];
         int[] counts = new int[OutputWriterBolt.N_RESULT];
 
-        // System.out.print("counterMap equal null?: " + counterMap == null + "\t");
-        // System.out.print("counterMap.keySet() == null?: " + counterMap.keySet() == null + "\t");
-
         ArrayList<String> hashtagsIter = new ArrayList<>(counterMap.keySet());
         Collections.sort(hashtagsIter);
 
