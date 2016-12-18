@@ -87,7 +87,6 @@ public class TwitterApp {
             writeHashtagsToKafka(status, true);
         }
         _send.get();
-        Thread.sleep(10 * 1000);
         closeKafkaProductors();
     }
 
