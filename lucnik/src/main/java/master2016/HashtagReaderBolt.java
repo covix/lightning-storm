@@ -1,5 +1,6 @@
 package master2016;
 
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import org.apache.storm.task.OutputCollector;
 import org.apache.storm.task.TopologyContext;
 import org.apache.storm.topology.OutputFieldsDeclarer;
@@ -15,6 +16,7 @@ public class HashtagReaderBolt extends BaseRichBolt {
     private String keyword;
     private OutputCollector collector;
     private boolean windowOpen;
+    private Object2IntOpenHashMap<String> counterMap;
 
     public HashtagReaderBolt(String keyword) {
         this.keyword = keyword;
@@ -23,23 +25,33 @@ public class HashtagReaderBolt extends BaseRichBolt {
 
     public void prepare(Map conf, TopologyContext context, OutputCollector collector) {
         this.collector = collector;
+        this.counterMap = new Object2IntOpenHashMap<>();
     }
 
     public void execute(Tuple tuple) {
         String hashtag = tuple.getStringByField("hashtag");
-        if (!this.windowOpen) {
-            if (this.keyword.equals(hashtag)) {
-                this.windowOpen = true;
-                this.collector.emit(new Values(hashtag));
 
+        if (this.keyword.equals(hashtag)) {
+            if (!this.windowOpen) {  // if the window was closed
+                this.windowOpen = true;
+            } else {
+                this.collector.emit(new Values(this.counterMap));
+                this.counterMap = new Object2IntOpenHashMap<>();
             }
         } else {
-            this.collector.emit(new Values(hashtag));
+            if (this.windowOpen) {
+                if (!this.counterMap.containsKey(hashtag)) {
+                    this.counterMap.put(hashtag, 1);
+                } else {
+                    this.counterMap.put(hashtag, this.counterMap.getInt(hashtag) + 1);
+                }
+            }
         }
+
         this.collector.ack(tuple);
     }
 
     public void declareOutputFields(OutputFieldsDeclarer declarer) {
-        declarer.declare(new Fields("hashtag"));
+        declarer.declare(new Fields("map"));
     }
 }
