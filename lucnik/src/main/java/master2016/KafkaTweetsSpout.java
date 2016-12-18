@@ -27,7 +27,6 @@ public class KafkaTweetsSpout extends BaseRichSpout {
     }
 
     public void open(Map conf, TopologyContext context, SpoutOutputCollector collector) {
-        // TODO move hardcoded arguments to the topology
         Properties properties = new Properties();
         properties.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, this.kafkaBrokerUrls);
         // TODO set static group.id

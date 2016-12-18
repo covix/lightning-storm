@@ -11,7 +11,6 @@ import twitter4j.conf.ConfigurationBuilder;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.nio.file.Paths;
 import java.util.Properties;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -26,34 +25,14 @@ public class TwitterApp {
     private static Future<RecordMetadata> _send;
 
     public static void main(String[] args) throws TwitterException, IOException, ExecutionException, InterruptedException {
-        int mode;
-        String consumerKey;
-        String consumerSecret;
-        String accessToken;
-        String accessTokenSecret;
-        String kafkaBrokerUrls;
-        String filename;
+        int mode = Integer.parseInt(args[0]);
+        String consumerKey = args[1];
+        String consumerSecret = args[2];
+        String accessToken = args[3];
+        String accessTokenSecret = args[4];
+        String kafkaBrokerUrls = args[5];
+        String filename = args[6];
 
-        if (args.length == 0) {
-            // TODO remove after startTwitterApp.sh is finished
-            // mode = Mode.TWITTER;
-            mode = Mode.LOGFILE;
-
-            consumerKey = "HZldFa2RQ8ByVPa5wTl7UKvQR";
-            consumerSecret = "ZwhQSj37kpq6vCRRShBwfK32iB58QnrcidnJJvxF5vzzxPSISM";
-            accessToken = "3936335896-DiNCA5l1tQabWe12V45yrARVG87bMGiHA9LzWBA";
-            accessTokenSecret = "fjeAmE1ZiY6Z34v5ioc32yh49HklHYNyIGFanPxWvqImw";
-            kafkaBrokerUrls = "localhost:9092";
-            filename = Paths.get("data", "tweets.txt").toString();
-        } else {
-            mode = Integer.parseInt(args[0]);
-            consumerKey = args[1];
-            consumerSecret = args[2];
-            accessToken = args[3];
-            accessTokenSecret = args[4];
-            kafkaBrokerUrls = args[5];
-            filename = args[6];
-        }
         initKafkaProducer(kafkaBrokerUrls);
 
         if (mode == Mode.TWITTER) {
@@ -98,10 +77,7 @@ public class TwitterApp {
 
         StatusListener listener = new StatusListener() {
             public void onStatus(Status status) {
-                // System.out.println(status.getLang() + ": " + "@" + status.getUser().getScreenName() + " - " + status.getText());
-                String jsonStatus = TwitterObjectFactory.getRawJSON(status);
                 try {
-                    // writeTweetToKafka(jsonStatus);
                     writeHashtagsToKafka(status);
                 } catch (ExecutionException | InterruptedException e) {
                     e.printStackTrace();
@@ -109,19 +85,15 @@ public class TwitterApp {
             }
 
             public void onDeletionNotice(StatusDeletionNotice statusDeletionNotice) {
-                // System.out.println("Got a status deletion notice id:" + statusDeletionNotice.getStatusId());
             }
 
             public void onTrackLimitationNotice(int numberOfLimitedStatuses) {
-                // System.out.println("Got track limitation notice:" + numberOfLimitedStatuses);
             }
 
             public void onScrubGeo(long userId, long upToStatusId) {
-                // System.out.println("Got scrub_geo event userId:" + userId + " upToStatusId:" + upToStatusId);
             }
 
             public void onStallWarning(StallWarning warning) {
-                // System.out.println("Got stall warning:" + warning);
             }
 
             public void onException(Exception ex) {
@@ -134,7 +106,6 @@ public class TwitterApp {
         AccessToken token = new AccessToken(accessToken, accessTokenSecret);
         twitterStream.setOAuthAccessToken(token);
 
-        // FilterQuery tweetFilterQuery = new FilterQuery();
         twitterStream.sample();
     }
 
@@ -148,7 +119,6 @@ public class TwitterApp {
         String key = null;
 
         for (HashtagEntity hashtag : tweet.getHashtagEntities()) {
-            // TODO remove check of languages
             Future<RecordMetadata> send = prod.send(new ProducerRecord<>(topic, partition, key, hashtag.getText()));
 
             if (wait) {
