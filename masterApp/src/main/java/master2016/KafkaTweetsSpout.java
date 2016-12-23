@@ -29,11 +29,9 @@ public class KafkaTweetsSpout extends BaseRichSpout {
     public void open(Map conf, TopologyContext context, SpoutOutputCollector collector) {
         Properties properties = new Properties();
         properties.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, this.kafkaBrokerUrls);
-        // TODO set static group.id
+        // Variable group.id for testing purposes
         properties.put("group.id", ((Long) System.currentTimeMillis()).toString());
-        // TODO true or false?
         properties.put("enable.auto.commit", "false");
-        // properties.put("auto.commit.interval.ms", "1000");
         properties.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
         properties.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
 
